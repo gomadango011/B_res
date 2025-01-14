@@ -36,7 +36,7 @@
 #include "ns3/wifi-module.h"
 #include "ns3/netanim-module.h"
 #include "myapp.h"
-#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/build/ns3/trace-helper.h"
+//#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/build/ns3/trace-helper.h"
 #include <random>
 #include "ns3/udp-echo-helper.h"
 #include <iostream>
@@ -97,6 +97,8 @@ private:
   /// Print routes if true
   bool printRoutes;
 
+  uint32_t network_size;
+
   //追加部分
   AodvHelper aodv;
   //PointToPointHelper point;
@@ -128,7 +130,7 @@ private:
   void InstallApplications ();
 };
 
-std::string def = "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/p-log/packet-num.txt"; // コピー先ファイル
+std::string def = "/home/admin-horie/exist_workspace/ns-3-allinone/B_res/p-log/node_300/packet_num.txt"; // コピー先ファイル
 int counter = 1;
 std::string newFilename;
 std::string p_file;
@@ -254,12 +256,13 @@ int main (int argc, char **argv)
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (200),
+  size (300),
   size_a (5),
   step (50),
   totalTime (20),
   pcap (true),
-  printRoutes (false)
+  printRoutes (false),
+  network_size(500)
 {
 }
 
@@ -392,8 +395,8 @@ AodvExample::CreateNodes ()
 
  MobilityHelper mobility;
   mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
-                                  "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=200]"),
-                                  "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=200]")
+                                  "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]"),
+                                  "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]")
                                  ); 
   
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -429,7 +432,7 @@ AodvExample::CreateNodes ()
   // AnimationInterface::SetConstantPosition (nodes.Get (3), 50, -10);
   // AnimationInterface::SetConstantPosition (nodes.Get (4), 100, -10);
   // AnimationInterface::SetConstantPosition (nodes.Get (5), 150, -10);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), 200, 200);
+  AnimationInterface::SetConstantPosition (nodes.Get (size-1), network_size, network_size);
   // AnimationInterface::SetConstantPosition (nodes.Get (7), 250, -10);
   // AnimationInterface::SetConstantPosition (nodes.Get (8), 270, 0);
   

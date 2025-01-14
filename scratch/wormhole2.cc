@@ -36,7 +36,7 @@
 #include "ns3/wifi-module.h"
 #include "ns3/netanim-module.h"
 #include "myapp.h"
-#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/build/ns3/trace-helper.h"
+//#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/build/ns3/trace-helper.h"
 #include <random>
 #include "ns3/udp-echo-helper.h"
 #include <iostream>

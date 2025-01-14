@@ -35,9 +35,9 @@
 #include "ns3/applications-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/netanim-module.h"
-#include "//home/horie/workplace_exist/ns-3-allinone/ns-3.30/src/wifi/helper/wifi-mac-helper.h"
+#include "ns3/wifi-mac-helper.h"
 #include "myapp.h"
-#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/src/wifi/model/yans-wifi-phy.h"
+#include "ns3/yans-wifi-phy.h"
 
 using namespace ns3;
 
