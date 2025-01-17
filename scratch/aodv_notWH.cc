@@ -130,7 +130,7 @@ private:
   void InstallApplications ();
 };
 
-std::string def = "/home/admin-horie/exist_workspace/ns-3-allinone/B_res/p-log/node_300/packet_num.txt"; // コピー先ファイル
+std::string def = "p-log/packet_num.txt"; // コピー先ファイル
 int counter = 1;
 std::string newFilename;
 std::string p_file;
@@ -198,6 +198,10 @@ int main (int argc, char **argv)
   std::ofstream MyFile3("com_num.txt");
 
   filename = GenerateUniqueFilename(def);
+
+  //絶対パスを取得
+  //auto absPath = std::filesystem::absolute(p_file);
+
   std::cout << filename << std::endl;
   std::ofstream p_log(filename);
   if(!p_log.is_open())
@@ -218,6 +222,7 @@ int main (int argc, char **argv)
   int RREP_num = 0;
   int WHC_num = 0;
   int WHE_num = 0;
+  int DC_num = 0;
 
   //ログ取得
   // 各ノードのAODVルーティングプロトコルインスタンスを取得し、トレースを設定
@@ -228,8 +233,9 @@ int main (int argc, char **argv)
       RREP_num = RREP_num + node->GetRREP();
       WHC_num = WHC_num + node->GetWHC();
       WHE_num = WHE_num + node->GetWHE();
+      DC_num = DC_num + node->GetDetCount();
 
-      printf("node id: %d サイズ：　%d\n", node->GetId(), node->GetWHC());
+      //printf("node id: %d サイズ：　%d\n", node->GetId(), node->GetWHC());
   }
 
   std::ofstream p_size(filename,std::ios::app);
@@ -247,6 +253,7 @@ int main (int argc, char **argv)
   p_size << "WH SUM: " << WHC_num + WHE_num << std::endl;
   p_size << "SUM: " << RREQ_num + RREP_num + WHC_num + WHE_num << std::endl;
   p_size << "WH_SUM/RREP" << (WHC_num + WHE_num) / RREP_num << std::endl;
+  p_size << "一回の検知に使用した平均パケットサイズ" << (WHC_num + WHE_num)/ DC_num << std::endl;
 
   p_size.close();
 
@@ -256,7 +263,7 @@ int main (int argc, char **argv)
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (300),
+  size (500),
   size_a (5),
   step (50),
   totalTime (20),
@@ -448,6 +455,12 @@ AodvExample::CreateDevices ()
   wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
+
+  //送信電力と受信電力を設定
+  //送信電力と受信電力を設定
+  wifiPhy.Set("TxPowerStart", DoubleValue(24.7)); // 送信電力 20 dBm
+  wifiPhy.Set("TxPowerEnd", DoubleValue(24.7));
+
   WifiHelper wifi;
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate6Mbps"), "RtsCtsThreshold", UintegerValue (0));
   devices = wifi.Install (wifiPhy, wifiMac, nodes); 
@@ -480,6 +493,8 @@ AodvExample::InstallInternetStack ()
   Ipv4AddressHelper address;
   address.SetBase ("10.0.0.0", "255.0.0.0","0.0.0.1");
   interfaces = address.Assign (devices);
+
+  //
 
 //   address.SetBase ("10.1.2.0", "255.255.255.0", "0.0.0.1");
 //   Ipv4InterfaceContainer mal_ifcont = address.Assign (mal_devices);

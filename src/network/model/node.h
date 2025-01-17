@@ -115,6 +115,10 @@ public:
 
     int GetWHE() const;
 
+    void SetDetCount(int cou);
+
+    int GetDetCount();
+
   /**
    * \brief Associate a NetDevice to this node.
    *
@@ -315,6 +319,7 @@ private:
   int RREP_num;
   int WHC_num;
   int WHE_num;
+  int DC_num;
 };
 
 } // namespace ns3

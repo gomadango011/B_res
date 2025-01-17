@@ -211,7 +211,7 @@ RoutingProtocol::RoutingProtocol ()
       WH_List {Ipv4Address("10.0.0.2"), Ipv4Address("10.0.0.3")},
       rreq_count (0),
       rrep_count (0),
-      WH_attack (1),
+      WH_attack (0),
       rrep_id (0)
 {
   if (m_enableHello)
@@ -1235,6 +1235,11 @@ RoutingProtocol::SendRequest (Ipv4Address dst) //RREQを送信する
                            &RoutingProtocol::SendTo, this, socket, packet, destination);
     }
 
+    //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
+
   ScheduleRreqRetry (dst);
 }
 
@@ -1299,8 +1304,6 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
   // WHCSのヘッダを作成
   WHCheckHeader WHCheckHeader;
 
-  
-  
   //1st,2ndホップノードを取得するためのルーティングテーブルを作成する
   RoutingTableEntry getnode;
   // originの宛先を持つルーティングテーブルから１st Hop, 2ns Hopの情報を取得する
@@ -1404,6 +1407,14 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
       Simulator::Schedule (Time (MilliSeconds (m_uniformRandomVariable->GetInteger (0, 10))),
                            &RoutingProtocol::SendTo, this, socket, packet, destination);
     }
+
+    //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetDetCount(node_count->GetDetCount() + 1);
+
+  node_count->SetWHC(node_count->GetWHC() + /*p->GetSize()*/ 38);
+
   //ScheduleWHCheckRetry (origin);
 }
 
@@ -1837,10 +1848,10 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
   RreqHeader rreqHeader;
   p->RemoveHeader (rreqHeader);
 
-  //ログファイルに書き込み
-  auto node_count = m_ipv4->GetObject<Node> ();
+  // //ログファイルに書き込み
+  // auto node_count = m_ipv4->GetObject<Node> ();
 
-  node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
+  // node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
 
   std::ofstream writing_file;
     std::string filename = "sample.txt";
@@ -2078,6 +2089,11 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
 
       
     }
+
+    //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
 }
 
 
@@ -2089,11 +2105,6 @@ RoutingProtocol::RecvWHCheck (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
   NS_LOG_FUNCTION (this);
   WHCheckHeader WHCheckHeader;
   p->RemoveHeader (WHCheckHeader);
-
-  //ログファイルに書き込み
-    auto node_count = m_ipv4->GetObject<Node> ();
-
-    node_count->SetWHC(node_count->GetWHC() + /*p->GetSize()*/ 38);
 
   //printf("Recv WHC\n");
   std::ofstream writing_file;
@@ -2444,6 +2455,11 @@ RoutingProtocol::RecvWHCheck (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
       Simulator::Schedule (Time (MilliSeconds (m_uniformRandomVariable->GetInteger (0, 10))),
                            &RoutingProtocol::SendTo, this, socket, packet, destination); //RRREQ送信部
     }
+
+    //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetWHC(node_count->GetWHC() + /*p->GetSize()*/ 38);
 }
 
 
@@ -2485,6 +2501,12 @@ RoutingProtocol::SendReply (RreqHeader const & rreqHeader, RoutingTableEntry con
   Ptr<Socket> socket = FindSocketWithInterfaceAddress (toOrigin.GetInterface ());
   NS_ASSERT (socket);
   socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
+
+  //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
+
 }
 
 
@@ -2570,6 +2592,11 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
   NS_ASSERT (socket);
 
   socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));//RREP送信部
+
+  //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetWHE(node_count->GetWHE() + /*p->GetSize()*/ 32);
 }
 
 
@@ -2671,12 +2698,6 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
       ProcessHello (rrepHeader, receiver);
       return;
     }
-
-  //ログファイルに書き込み
-  auto node_count = m_ipv4->GetObject<Node> ();
-
-  node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
-
 
   // printf("Receav RREP\n");
 
@@ -2836,6 +2857,8 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
 //   }
 
     //int size_List = WH_List.size();
+
+    //WH攻撃を行う場合
     if(WH_attack == 1)
     {
     //1/2の確率で1と0のどちらかを出力します
@@ -2862,6 +2885,12 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
             Ptr<Socket> socket = FindSocketWithInterfaceAddress (toOrigin.GetInterface ());
             NS_ASSERT (socket);
             socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
+
+            //ログファイルに書き込み
+            auto node_count = m_ipv4->GetObject<Node> ();
+
+            node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
+
             return;
           }
           else
@@ -2897,11 +2926,6 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
   p->RemoveHeader (WHEndHeader);
   Ipv4Address dst = WHEndHeader.GetDst ();
   NS_LOG_LOGIC ("WHCE destination " << dst << " WHCE origin " << WHEndHeader.GetOrigin ());
-
-  //ログファイルに書き込み
-  auto node_count = m_ipv4->GetObject<Node> ();
-
-  node_count->SetWHE(node_count->GetWHE() + /*p->GetSize()*/ 32);
 
   std::ofstream writing_file;
     std::string filename = "sample.txt";
@@ -3030,6 +3054,11 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
         Ptr<Socket> socket = FindSocketWithInterfaceAddress (toSrc.GetInterface ());
         NS_ASSERT (socket);
         socket->SendTo (packet, 0, InetSocketAddress (toSrc.GetNextHop (), AODV_PORT));
+
+        //ログファイルに書き込み
+        auto node_count = m_ipv4->GetObject<Node> ();
+
+        node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
     
       return;
     }
@@ -3083,6 +3112,11 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
   Ptr<Socket> socket = FindSocketWithInterfaceAddress (toOrigin.GetInterface ());
   NS_ASSERT (socket);
   socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
+
+  //ログファイルに書き込み
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  node_count->SetWHE(node_count->GetWHE() + /*p->GetSize()*/ 32);
 }
 
 void

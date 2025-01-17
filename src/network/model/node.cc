@@ -81,7 +81,8 @@ Node::Node()
     RREQ_num(0),
     RREP_num(0),
     WHC_num(0),
-    WHE_num(0)
+    WHE_num(0),
+    DC_num(0)
 {
   NS_LOG_FUNCTION (this);
   Construct ();
@@ -176,6 +177,17 @@ Node::GetWHE() const
     return WHE_num;
 }
 
+void
+Node::SetDetCount(int cou)
+{
+  DC_num = cou;
+}
+
+int
+Node::GetDetCount()
+{
+  return DC_num;
+}
 
 uint32_t
 Node::AddDevice (Ptr<NetDevice> device)
