@@ -55,6 +55,9 @@
 #include <cstdlib> 
 using namespace std;
 
+//検知メッセージのファーストホップとセカンドホップを記録する用のログファイル
+const char* logfile2 = "fir-sec-log.txt";
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("AodvRoutingProtocol");
@@ -1336,16 +1339,16 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
       return;
     }
 
-  if(getnode.GetNextHop() == Ipv4Address("10.0.0.3"))
-  {
-    std::ofstream writing_file;
-    std::string filename = "WH_count.txt";
-    writing_file.open(filename, std::ios::app);
-    std::string writing_text ="1";
-    writing_file << writing_text << std::endl;
-    writing_file.close();
-    printf("WHの可能性があります\n");
-  }
+  // if(getnode.GetNextHop() == Ipv4Address("10.0.0.3"))
+  // {
+  //   std::ofstream writing_file;
+  //   std::string filename = "WH_count.txt";
+  //   writing_file.open(filename, std::ios::app);
+  //   std::string writing_text ="1";
+  //   writing_file << writing_text << std::endl;
+  //   writing_file.close();
+  //   printf("WHの可能性があります\n");
+  // }
 
   // printf("First Hop: %u\n", getnode.GetNextHop().Get());
 
@@ -1365,6 +1368,32 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
   WHCheckHeader.SetOriginSeqno (m_WHseqNo);
   m_WHCSId++;
   WHCheckHeader.SetId (m_WHCSId);
+
+  auto node_count = m_ipv4->GetObject<Node> ();
+
+  NS_LOG_DEBUG ("ファーストホップノード：" << WHCheckHeader.GetFir()<< "セカンドホップノード" << WHCheckHeader.GetSecond());
+
+  std::ofstream ofs(logfile2 , std::ios::app);
+
+  ofs << "ファーストホップノード：" << WHCheckHeader.GetFir()<< "セカンドホップノード" << WHCheckHeader.GetSecond() << std::endl;
+
+  //検知メッセージがWH攻撃に向けたものかをチェックする
+  if(WHCheckHeader.GetFir() == Ipv4Address("10.0.0.3") && WHCheckHeader.GetSecond() == Ipv4Address("10.0.0.2"))
+  {
+    //フラグを設定
+    WHCheckHeader.SetWH_Flag(1);
+
+    ofs << "WHフラグをたてました" << std::endl;
+
+    node_count->SetWHDetection(node_count->GetWHDetection() + 1);
+  }
+  else
+  {
+    WHCheckHeader.SetWH_Flag(0);
+
+    //送信したノードIDを保存
+    node_count->AddSendID(WHCheckHeader.GetId());
+  }
 
   // aodvが使用する各インターフェースから、サブネット指向のブロードキャストとしてRREQを送信する。
   //std::map:平衡2分木
@@ -1409,7 +1438,7 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
     }
 
     //ログファイルに書き込み
-  auto node_count = m_ipv4->GetObject<Node> ();
+  //auto node_count = m_ipv4->GetObject<Node> ();
 
   node_count->SetDetCount(node_count->GetDetCount() + 1);
 
@@ -1907,15 +1936,16 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
    *  4. ホップ数はRREQメッセージのホップ数からコピーされる；
    *  5. ここで、MinimalLifetime = 現在時刻 + 2*NetTraversalTime - 2*HopCount*NodeTraversalTime である。
    */
+  if(second == Ipv4Address ("10.1.2.1"))
+  {
+    second = Ipv4Address ("10.0.0.2");
+  }
+
   RoutingTableEntry toOrigin;
   if (!m_routingTable.LookupRoute (
           origin,
           toOrigin)) //宛先アドレス dst=origin を使用してルーティング テーブル エントリを検索します。
     {
-      if(second == Ipv4Address ("10.1.2.1"))
-      {
-        second = Ipv4Address ("10.0.0.2");
-      }
     
       Ptr<NetDevice> dev = m_ipv4->GetNetDevice (m_ipv4->GetInterfaceForAddress (receiver));
       RoutingTableEntry newEntry (
@@ -2571,7 +2601,9 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
   WHEndHeader WHEndHeader (/*prefixSize=*/0, /*hops=*/0, /*WHCE Id*/id, /*dst=*/receiver,//WHCEパケットを送信するノード
                          /*dstSeqNo=*/m_seqNo, /*origin=*/toOrigin.GetDestination (),//WHCEパケットの目的地
                          /*srcノードのIPアドレス*/WHCheckHeader.GetSrc (),
-                         /*aodvのdst*/ WHCheckHeader.GetDst(), /*lifeTime=*/m_myRouteTimeout, rrepid);
+                         /*aodvのdst*/ WHCheckHeader.GetDst(), /*lifeTime=*/m_myRouteTimeout, rrepid,
+                         WHCheckHeader.GetWH_Flag()
+                         );
   
   //Ipv4Address ori1 = WHEndHeader.GetOrigin ();
 
@@ -3019,6 +3051,8 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
   //   }
   NS_LOG_LOGIC ("receiver " << receiver << " origin " << WHEndHeader.GetOrigin ());
 
+  auto node_count = m_ipv4->GetObject<Node> ();
+
   //目的地が自分のアドレスと一致
   if (IsMyOwnAddress (WHEndHeader.GetOrigin ()))
     {
@@ -3028,7 +3062,17 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
           m_addressReqTimer[dst].Remove ();
           m_addressReqTimer.erase (dst);
         }
-      
+
+        if(WHEndHeader.GetWH_Flag() == 1)
+        {
+          //WH攻撃を正常なノードと判定した
+          node_count->SetWHDetection_miss(node_count->GetWHDetection_miss() +1);
+        }
+        else{
+          //受信したIDを保存
+          node_count->AddRecvID(id);
+        }
+
       //RREPを送信する
       RoutingTableEntry toSrc;
       Ipv4Address src = WHEndHeader.GetSrc();
@@ -3114,7 +3158,7 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
   socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
 
   //ログファイルに書き込み
-  auto node_count = m_ipv4->GetObject<Node> ();
+  //auto node_count = m_ipv4->GetObject<Node> ();
 
   node_count->SetWHE(node_count->GetWHE() + /*p->GetSize()*/ 32);
 }

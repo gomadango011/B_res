@@ -381,7 +381,10 @@ public:
               uint32_t WHCheckID = 0, Ipv4Address fir = Ipv4Address (),
               uint32_t firSeqNo = 0, Ipv4Address origin = Ipv4Address (),
               uint32_t originSeqNo = 0, Ipv4Address sec = Ipv4Address (), Ipv4Address src = Ipv4Address (),
-              Ipv4Address Dst = Ipv4Address(), uint8_t WHF = 0, uint8_t rrepid = 0);
+              Ipv4Address Dst = Ipv4Address(), uint8_t WHF = 0, uint8_t rrepid = 0,
+              //WH攻撃を行ったかわかる用のフラグ
+              uint8_t WHflag = 0
+              );
 
   /**
    * \brief Get the type ID.
@@ -517,6 +520,17 @@ public:
     return m_rrepid;
   }
 
+  //WH攻撃を行ったかわかる用のフラグ
+  void SetWH_Flag(uint8_t f)
+  {
+    m_WHflag = f;
+  }
+
+  uint8_t GetWH_Flag() const
+  {
+    return m_WHflag;
+  }
+
   /**
    * \brief Set the origin sequence number
    * \param s the origin sequence number
@@ -596,6 +610,8 @@ private:
   Ipv4Address  m_dst;
   uint8_t m_whf;
   uint8_t        m_rrepid;
+  //WH攻撃を行ったかわかる用のフラグ
+  uint8_t m_WHflag;
 };
 
 /**
@@ -836,7 +852,10 @@ public:
   WHEndHeader (uint8_t prefixSize = 0, uint8_t hopCount = 0, uint32_t WHEndID = 0,
                 Ipv4Address dst =Ipv4Address (),uint32_t dstSeqNo = 0, Ipv4Address origin =Ipv4Address (),
                 Ipv4Address source =Ipv4Address (),Ipv4Address aodv_dst = Ipv4Address(), 
-                Time lifetime = MilliSeconds (0), uint8_t rrepid = 0);
+                Time lifetime = MilliSeconds (0), uint8_t rrepid = 0,
+                //WH攻撃を行ったかわかる用のフラグ
+                uint8_t WHflag = 0
+                );
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -968,6 +987,18 @@ public:
     return m_rrepid;
   }
 
+  //WH攻撃を行ったかわかる用のフラグ
+  //WH攻撃を行ったかわかる用のフラグ
+  void SetWH_Flag(uint8_t f)
+  {
+    m_WHflag = f;
+  }
+
+  uint8_t GetWH_Flag() const
+  {
+    return m_WHflag;
+  }
+
   /**
    * \brief Set the lifetime
    * \param t the lifetime
@@ -1028,6 +1059,8 @@ private:
   Ipv4Address   m_aodv_dst;
   uint32_t      m_lifeTime;         ///< Lifetime (in milliseconds)
   uint8_t       m_rrepid;
+  //WH攻撃を行ったかわかる用のフラグ
+  uint8_t m_WHflag;
 };
 
 /**

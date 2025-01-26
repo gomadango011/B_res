@@ -318,7 +318,7 @@ RreqHeader::operator== (RreqHeader const & o) const
 
 WHCheckHeader::WHCheckHeader (uint8_t flags, uint8_t reserved, uint8_t hopCount, uint32_t WHcheckID, Ipv4Address fir,
                         uint32_t firSeqNo, Ipv4Address origin, uint32_t originSeqNo, Ipv4Address sec, Ipv4Address src,
-                        Ipv4Address dst, uint8_t whf, uint8_t rrepid)
+                        Ipv4Address dst, uint8_t whf, uint8_t rrepid, uint8_t WHflag)
   : m_flags (flags),
     m_reserved (reserved),
     m_hopCount (hopCount),
@@ -331,7 +331,9 @@ WHCheckHeader::WHCheckHeader (uint8_t flags, uint8_t reserved, uint8_t hopCount,
     m_src (src),
     m_dst (dst),
     m_whf (whf),
-    m_rrepid (rrepid)
+    m_rrepid (rrepid),
+    //WH攻撃を行ったかわかる用のフラグ
+    m_WHflag (WHflag)
 {
 }
 
@@ -357,7 +359,9 @@ WHCheckHeader::GetInstanceTypeId () const
 uint32_t
 WHCheckHeader::GetSerializedSize () const
 {
-  return 38;
+  //38+1(WH攻撃を行ったかわかる用のフラグ)
+  //return 38;
+  return 39;
 //  return 37;
  //return 23;
 }
@@ -378,6 +382,8 @@ WHCheckHeader::Serialize (Buffer::Iterator i) const
   WriteTo (i, m_dst);
   i.WriteU8 (m_whf);
   i.WriteU8 (m_rrepid);
+  //WH攻撃を行ったかわかる用のフラグ
+  i.WriteU8 (m_WHflag);
 }
 
 uint32_t
@@ -398,7 +404,11 @@ WHCheckHeader::Deserialize (Buffer::Iterator start)
   m_whf = i.ReadU8 ();
   m_rrepid = i.ReadU8 ();
 
+  //WH攻撃を行ったかわかる用のフラグ
+
   uint32_t dist = i.GetDistanceFrom (start);
+  m_WHflag = i.ReadU8 ();
+
   //GetSerializedSize() = 31
   //NS_ASSERT (dist == /*GetSerializedSize() = */31);
   return dist;
@@ -499,7 +509,9 @@ WHCheckHeader::operator== (WHCheckHeader const & o) const
 WHEndHeader::WHEndHeader (uint8_t prefixSize, uint8_t hopCount, uint32_t WHEndID,
                         Ipv4Address dst, uint32_t dstSeqNo, Ipv4Address origin, 
                         Ipv4Address src, Ipv4Address aodv_dst,
-                        Time lifeTime, uint8_t rrepid)
+                        Time lifeTime, uint8_t rrepid, 
+                        //WH攻撃を行ったかわかる用のフラグ
+                        uint8_t WHflag)
   : m_flags (0),
     m_prefixSize (prefixSize),
     m_hopCount (hopCount),
@@ -509,7 +521,8 @@ WHEndHeader::WHEndHeader (uint8_t prefixSize, uint8_t hopCount, uint32_t WHEndID
     m_origin (origin),
     m_source (src),
     m_aodv_dst (aodv_dst),
-    m_rrepid (rrepid)
+    m_rrepid (rrepid),
+    m_WHflag (WHflag)
 {
   m_lifeTime = uint32_t (lifeTime.GetMilliSeconds ());
 }
@@ -536,7 +549,9 @@ WHEndHeader::GetInstanceTypeId () const
 uint32_t
 WHEndHeader::GetSerializedSize () const
 {
-  return 32;
+  //return 32;
+  //32+1(フラグ用)
+  return 33;
   // return 31;
   //return 27;
 }
@@ -555,6 +570,9 @@ WHEndHeader::Serialize (Buffer::Iterator i) const
   WriteTo (i, m_aodv_dst);
   i.WriteHtonU32 (m_lifeTime);
   i.WriteU8 (m_rrepid);
+
+  //WH攻撃を行ったかわかる用のフラグ
+  i.WriteU8 (m_WHflag);
 }
 
 uint32_t
@@ -573,6 +591,9 @@ WHEndHeader::Deserialize (Buffer::Iterator start)
   ReadFrom (i, m_aodv_dst);
   m_lifeTime = i.ReadNtohU32 ();
   m_rrepid = i.ReadU8 ();
+
+  //WH攻撃を行ったかわかる用のフラグ
+  m_WHflag = i.ReadU8 ();
 
   uint32_t dist = i.GetDistanceFrom (start);
   NS_ASSERT (dist == GetSerializedSize ());

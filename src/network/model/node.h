@@ -119,6 +119,45 @@ public:
 
     int GetDetCount();
 
+    /*
+      検知率に関するデータ取得用関数
+    */
+    //すべての検知回数を保存する関数
+    void SetDetectionEnd(int de);
+
+    //すべての検知回数を参照する関数
+    int GetDetectionEnd() const;
+
+    //WH攻撃を対象とした検知回数
+    void SetWHDetection(int whdc);
+    
+    int GetWHDetection() const;
+
+    //WH攻撃を正常であると検知した回数
+    void SetWHDetection_miss(int whdm);
+
+    int GetWHDetection_miss() const;
+
+    //正常なリンクをWHリンクと誤検知した回数
+    void SetDetection_miss(int dm);
+
+    int GetDetecstion_miss() const;
+
+    //WHを検知しようとした回数をカウントする変数
+    void SetFlag_Count(int flag);
+
+    int GetFlag_Count() const;
+
+    //送信したID
+    void AddSendID(uint32_t s_id);
+
+    std::vector<uint32_t> GetSendID() const;
+
+    //受信したID
+    void AddRecvID(uint32_t s_id);
+
+    std::vector<uint32_t> GetRecvID() const;
+
   /**
    * \brief Associate a NetDevice to this node.
    *
@@ -320,6 +359,20 @@ private:
   int WHC_num;
   int WHE_num;
   int DC_num;
+
+  //検知率に関する変数
+    int DE_num;
+    int WHDC_num;
+    int WHDM_num;
+    int DM_num;
+
+    //WHを検知しようとした回数をカウントする変数
+    int Flag_Count_num;
+
+    //送信した検知メッセージのID
+    std::vector<uint32_t> send_ID;
+    //受信した検知メッセージのID
+    std::vector<uint32_t> recv_ID;
 };
 
 } // namespace ns3
