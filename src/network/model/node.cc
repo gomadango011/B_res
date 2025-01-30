@@ -38,6 +38,8 @@ NS_LOG_COMPONENT_DEFINE ("Node");
 
 NS_OBJECT_ENSURE_REGISTERED (Node);
 
+std::vector<uint32_t> null_list;
+
 /**
  * \brief A global switch to enable all checksums for all protocols.
  */
@@ -82,7 +84,14 @@ Node::Node()
     RREP_num(0),
     WHC_num(0),
     WHE_num(0),
-    DC_num(0)
+    DC_num(0),
+    DE_num(0),
+    WHDC_num(0),
+    WHDM_num(0),
+    DM_num(0),
+    Flag_Count_num(0),
+    send_ID(null_list),
+    recv_ID(null_list)
 {
   NS_LOG_FUNCTION (this);
   Construct ();
@@ -187,6 +196,93 @@ int
 Node::GetDetCount()
 {
   return DC_num;
+}
+
+//検知率に関する関数
+void 
+Node::SetDetectionEnd(int de)
+{
+    DE_num = de;
+}
+
+int
+Node::GetDetectionEnd() const
+{
+    return DE_num;
+}
+
+void
+Node::SetWHDetection(int whdc)
+{
+    WHDC_num = whdc;
+}
+
+int
+Node::GetWHDetection() const
+{
+    return WHDC_num;
+}
+
+void
+Node::SetWHDetection_miss(int whdm)
+{
+    WHDM_num = whdm;
+}
+
+int
+Node::GetWHDetection_miss() const
+{
+    return WHDM_num;
+}
+
+void
+Node::SetDetection_miss(int dm)
+{
+    DM_num = dm;
+}
+
+int
+Node::GetDetecstion_miss() const
+{
+    return DM_num;
+}
+
+void
+Node::SetFlag_Count(int flag)
+{
+    Flag_Count_num = flag;
+}
+
+int
+Node::GetFlag_Count() const
+{
+    return Flag_Count_num;
+}
+
+//送信した検知メッセージのID
+void
+Node::AddSendID(uint32_t s_id)
+{
+  send_ID.push_back(s_id);
+}
+
+std::vector<uint32_t> 
+Node::GetSendID() const
+{
+  return send_ID;
+}
+
+//受信した検知メッセージのID
+void
+Node::AddRecvID(uint32_t r_id)
+{
+  recv_ID.push_back(r_id);
+}
+
+std::vector<uint32_t>
+Node::GetRecvID() const
+{
+  return recv_ID;
 }
 
 uint32_t
