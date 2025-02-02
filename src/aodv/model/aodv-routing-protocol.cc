@@ -2262,7 +2262,7 @@ RoutingProtocol::RecvWHCheck (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
     hop++;
   }
 
-  if(WHFlag != 1 && hop >= 5)
+  if(WHFlag != 1 && hop >= 6)
   {
     //ファイルに書き込み
     

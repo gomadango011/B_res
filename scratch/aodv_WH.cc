@@ -259,7 +259,7 @@ int main (int argc, char **argv)
         {
             auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
 
-            if(find == recv_id.end())
+            if(find == recv_id.end() && i != send_id.size() - 1)
             {
                 //送信したIDのメッセージを受信していない場合、誤検知としてカウント
                 DM_num = DM_num + 1;
@@ -316,10 +316,10 @@ int main (int argc, char **argv)
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (500),
+  size (450),
   size_a (5),
   step (50),
-  totalTime (60),
+  totalTime (40),
   pcap (true),
   printRoutes (false),
   network_size(500)
@@ -471,13 +471,13 @@ AodvExample::CreateNodes ()
 //   malicious.Add(nodes.Get(2));//WH2
 
    AnimationInterface anim ("wormhole.xml"); // Mandatory
-  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 0);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), network_size, network_size);
+  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (size-1), network_size, 250);
 
   //WHノードを配置
   //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
-  AnimationInterface::SetConstantPosition (nodes.Get (1), 100, 100);
-  AnimationInterface::SetConstantPosition (nodes.Get (2), 400, 400);
+  AnimationInterface::SetConstantPosition (nodes.Get (1), 100, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (2), 350, 250);
 
   malicious.Add(nodes.Get(1)); //WH1
   malicious.Add(nodes.Get(2));//WH2
