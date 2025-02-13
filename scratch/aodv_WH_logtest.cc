@@ -331,10 +331,10 @@ int main (int argc, char **argv)
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (400),
+  size (11),
   size_a (5),
   step (50),
-  totalTime (40),
+  totalTime (10),
   pcap (true),
   printRoutes (false),
   network_size(500)
@@ -350,15 +350,15 @@ AodvExample::Configure (int argc, char **argv)
   // LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_ALL);
 
   std::random_device randomseed;
-  //int rand = randomseed();
+  int rand = randomseed();
   // SeedManager::SetSeed (rand);
 
-  SeedManager::SetSeed (12);
+  SeedManager::SetSeed (503172240);
 
 
   std::ofstream p_size(filename,std::ios::app);
 
-  p_size << "シード値" << counter << std::endl;
+  p_size << "シード値" << rand << std::endl;
   CommandLine cmd;
 
   cmd.AddValue ("pcap", "Write PCAP traces.", pcap);
@@ -475,36 +475,42 @@ AodvExample::CreateNodes ()
   // mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   // mobility.Install (nodes);
 
- MobilityHelper mobility;
-  mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
-                                  "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]"),
-                                  "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]")
-                                 ); 
-  
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (nodes);
-  
-//   not_malicious.Add(nodes.Get(0));        //src
-//   not_malicious.Add(nodes.Get(size-1));  //dst
-  // not_malicious.Add(nodes.Get(3));
-  // not_malicious.Add(nodes.Get(4));
-  // not_malicious.Add(nodes.Get(5));
-//   malicious.Add(nodes.Get(1)); //WH1
-//   malicious.Add(nodes.Get(2));//WH2
+  MobilityHelper mobility;
+    // mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
+    //                               "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]"),
+    //                               "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]")
+    //                              ); 
 
-   AnimationInterface anim ("wormhole.xml"); // Mandatory
-  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), network_size, 250);
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    mobility.Install (nodes);
 
-  //WHノードを配置
-  //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
-  AnimationInterface::SetConstantPosition (nodes.Get (1), 100, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (2), 350, 250);
+    //AnimationInterface anim ("wormhole.xml"); // Mandatory
+    AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 0);
+    // AnimationInterface::SetConstantPosition (nodes.Get (5), 150, -10);
+    AnimationInterface::SetConstantPosition (nodes.Get (size - 1), 500, 0);  
+    // AnimationInterface::SetConstantPosition (nodes.Get (7), 250, -10);
+    // AnimationInterface::SetConstantPosition (nodes.Get (8), 270, 0);
 
-  malicious.Add(nodes.Get(1)); //WH1
-  malicious.Add(nodes.Get(2));//WH2
+    //WH攻撃のノードを配置
+    AnimationInterface::SetConstantPosition (nodes.Get (1), 50, 0);
+    AnimationInterface::SetConstantPosition (nodes.Get (2), 350, 0);
+
+    //周辺ノードを配置
+    AnimationInterface::SetConstantPosition (nodes.Get (3), 50, 30);
+    AnimationInterface::SetConstantPosition (nodes.Get (4), 130, 30);
+    AnimationInterface::SetConstantPosition (nodes.Get (5), 210, 30);
+    AnimationInterface::SetConstantPosition (nodes.Get (6), 290, 30);
+    AnimationInterface::SetConstantPosition (nodes.Get (7), 370, 30);
+    AnimationInterface::SetConstantPosition (nodes.Get (8), 450, 30);
+
+    AnimationInterface::SetConstantPosition (nodes.Get (9), 430, 0);
+
+    //WHノードをノードコンテナに追加
+    malicious.Add(nodes.Get(1)); //WH1
+    malicious.Add(nodes.Get(2));//WH2
+
   
-  anim.EnablePacketMetadata(true);
+  //anim.EnablePacketMetadata(true);
 
 }
 

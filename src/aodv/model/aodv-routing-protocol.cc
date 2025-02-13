@@ -1185,7 +1185,7 @@ RoutingProtocol::SendRequest (Ipv4Address dst) //RREQを送信する
     }
   // if (m_destinationOnly)
   //   {
-  //     rreqHeader.SetDestinationOnly (true);
+      rreqHeader.SetDestinationOnly (true);
   //   }
 
   m_seqNo++;
@@ -1243,7 +1243,19 @@ RoutingProtocol::SendRequest (Ipv4Address dst) //RREQを送信する
 
   node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
 
-  ScheduleRreqRetry (dst);
+  //再ブロードキャストのためにコメントアウト
+  //ScheduleRreqRetry (dst);
+
+  //ちょっと検知コストが安くなる
+  // RouteRequestTimerExpire(dst);
+
+//本家
+  ScheduleRreqRetry(dst);
+
+  // static int a=0;
+  //   if(a<5)
+  //   ScheduleRreqRetry(dst);
+  //   a++;
 }
 
 void RoutingProtocol::SendTo (Ptr<Socket> socket, Ptr<Packet> packet,
@@ -1278,6 +1290,7 @@ RoutingProtocol::ScheduleRreqRetry (Ipv4Address dst) //RREQの再送信
       NS_LOG_LOGIC ("Applying binary exponential backoff factor " << backoffFactor);
       retry = m_netTraversalTime * (1 << backoffFactor);
     }
+
   m_addressReqTimer[dst].Schedule (retry);
   NS_LOG_LOGIC ("Scheduled RREQ retry in " << retry.GetSeconds () << " seconds");
 }
@@ -1290,7 +1303,7 @@ Send WHCheck
 void
 RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
 {
-  printf("Send WHCheck\n");
+  //printf("Send WHCheck\n");
   NS_LOG_FUNCTION (this << rrepHeader.GetDst());
   // ノードは1秒間にRREQ_RATELIMITを超えるRREQメッセージを発信すべきではない[SHOULD NOT]。
   // if (m_WHCheckCount == m_WHCheckRateLimit)
@@ -1443,6 +1456,8 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
   node_count->SetDetCount(node_count->GetDetCount() + 1);
 
   node_count->SetWHC(node_count->GetWHC() + /*p->GetSize()*/ 38);
+
+  std::cout << Simulator::Now() << std::endl;
 
   //ScheduleWHCheckRetry (origin);
 }
@@ -2517,7 +2532,7 @@ RoutingProtocol::SendReply (RreqHeader const & rreqHeader, RoutingTableEntry con
   RrepHeader rrepHeader ( /*prefixSize=*/ 0, /*hops=*/ 0, /*dst=*/ rreqHeader.GetDst (),
                           /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id);
 
-  printf("RREP送信時のFirst Hop: %u\n", toOrigin.GetNextHop().Get ());
+  //printf("RREP送信時のFirst Hop: %u\n", toOrigin.GetNextHop().Get ());
 
   //パケット作成部分？
 
@@ -2609,7 +2624,7 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
 
   // printf("sender : %d\n",receiver.Get ());
   // printf("origin : %d\n", ori1.Get ());
-  printf("WHEを送信　ID:%d\n", WHEndHeader.GetRREPid());
+  //printf("WHEを送信　ID:%d\n", WHEndHeader.GetRREPid());
 
 
   //パケット作成部分？
@@ -2733,7 +2748,7 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
 
   // printf("Receav RREP\n");
 
-  printf("Recv RREP ID:%d\n", rrepHeader.Getid());
+  //printf("Recv RREP ID:%d\n", rrepHeader.Getid());
   
   std::ofstream writing_file;
     std::string filename = "com_num.txt";
@@ -2810,9 +2825,11 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
       
       printf("---------------RREPが目的地に到着---------------:%d　　ID:%d\n", rrep_count, rrepHeader.Getid());
 
+      std::cout << "RREQの送信元ノードID" << rrepHeader.GetOrigin() <<std::endl;
+
       // exit(0);
 
-      RouteRequestTimerExpire(Ipv4Address("10.0.0.200"));
+      //RouteRequestTimerExpire(Ipv4Address(rrepHeader.GetDst()));
 
       return;
 
@@ -2890,48 +2907,48 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
 
     //int size_List = WH_List.size();
 
-    //WH攻撃を行う場合
-    if(WH_attack == 1)
-    {
-    //1/2の確率で1と0のどちらかを出力します
-    std::srand( time(NULL) );
-    int rand = std::rand();
-
-    int WH_at = rand  % 2;
-
-    // for(int i = 0; i< size_List; i++)
+    // //WH攻撃を行う場合
+    // if(WH_attack == 1)
     // {
-        if(receiver == Ipv4Address("10.0.0.3"))
-        {
-          if(WH_at == 0)
-          {
-            get_rreptimes++;
-            printf("---------WHノードによってRREP偽造---------- : %d\n", get_rreptimes);
-            Ptr<Packet> packet = Create<Packet> ();
-            SocketIpTtlTag ttl;
-            ttl.SetTtl (tag.GetTtl () - 1);
-            packet->AddPacketTag (ttl);
-            packet->AddHeader (rrepHeader);
-            TypeHeader tHeader (AODVTYPE_RREP);
-            packet->AddHeader (tHeader);
-            Ptr<Socket> socket = FindSocketWithInterfaceAddress (toOrigin.GetInterface ());
-            NS_ASSERT (socket);
-            socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
+    // //1/2の確率で1と0のどちらかを出力します
+    // std::srand( time(NULL) );
+    // int rand = std::rand();
 
-            //ログファイルに書き込み
-            auto node_count = m_ipv4->GetObject<Node> ();
+    // int WH_at = rand  % 2;
 
-            node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
+    // // for(int i = 0; i< size_List; i++)
+    // // {
+    //     if(receiver == Ipv4Address("10.0.0.3"))
+    //     {
+    //       if(WH_at == 0)
+    //       {
+    //         get_rreptimes++;
+    //         printf("---------WHノードによってRREP偽造---------- : %d\n", get_rreptimes);
+    //         Ptr<Packet> packet = Create<Packet> ();
+    //         SocketIpTtlTag ttl;
+    //         ttl.SetTtl (tag.GetTtl () - 1);
+    //         packet->AddPacketTag (ttl);
+    //         packet->AddHeader (rrepHeader);
+    //         TypeHeader tHeader (AODVTYPE_RREP);
+    //         packet->AddHeader (tHeader);
+    //         Ptr<Socket> socket = FindSocketWithInterfaceAddress (toOrigin.GetInterface ());
+    //         NS_ASSERT (socket);
+    //         socket->SendTo (packet, 0, InetSocketAddress (toOrigin.GetNextHop (), AODV_PORT));
 
-            return;
-          }
-          else
-          {
-            printf("----------RREPを転送しない攻撃です---------------\n");
-          }
+    //         //ログファイルに書き込み
+    //         auto node_count = m_ipv4->GetObject<Node> ();
+
+    //         node_count->SetRREP(node_count->GetRREP() + /*p->GetSize()*/ 20);
+
+    //         return;
+    //       }
+    //       else
+    //       {
+    //         printf("----------RREPを転送しない攻撃です---------------\n");
+    //       }
           
-        }
-    }
+    //     }
+    // }
     //}
 
     SendWHCheck(rrepHeader);
@@ -2979,7 +2996,7 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
       return;
     }
 
-  printf("Receav WHEnd  ID:%d\n", WHEndHeader.GetRREPid());
+  //printf("Receav WHEnd  ID:%d\n", WHEndHeader.GetRREPid());
 
   // // RREPがHelloメッセージの場合
   // if (dst == WHEndHeader.GetOrigin ())
@@ -3085,7 +3102,7 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
                               /*dstSeqNo=*/ m_seqNo, /*origin=*/ toSrc.GetDestination (),
                               /*lifeTime=*/ m_myRouteTimeout, WHEndHeader.GetRREPid());
 
-      printf("RREPを送信　ID:%d\n", rrepHeader.Getid());
+      //printf("RREPを送信　ID:%d\n", rrepHeader.Getid());
 
       //RREPパケット作製
         Ptr<Packet> packet = Create<Packet> ();
@@ -3313,19 +3330,22 @@ RoutingProtocol::RouteRequestTimerExpire (Ipv4Address dst) //ルート探索プ�
       m_queue.DropPacketWithDst (dst);
       return;
     }
+    
+    SendRequest (dst);
 
-  if (toDst.GetFlag () == IN_SEARCH)
-    {
-      NS_LOG_LOGIC ("Resend RREQ to " << dst << " previous ttl " << toDst.GetHop ());
-      SendRequest (dst);
-    }
-  else
-    {
-      NS_LOG_DEBUG ("Route down. Stop search. Drop packet with destination " << dst);
-      m_addressReqTimer.erase (dst);
-      m_routingTable.DeleteRoute (dst);
-      m_queue.DropPacketWithDst (dst);
-    }
+//RREQ最ブロードキャストするために、コメントアウト
+  // if (toDst.GetFlag () == IN_SEARCH)
+  //   {
+  //     NS_LOG_LOGIC ("Resend RREQ to " << dst << " previous ttl " << toDst.GetHop ());
+  //     SendRequest (dst);
+  //   }
+  // else
+  //   {
+  //     NS_LOG_DEBUG ("Route down. Stop search. Drop packet with destination " << dst);
+  //     m_addressReqTimer.erase (dst);
+  //     m_routingTable.DeleteRoute (dst);
+  //     m_queue.DropPacketWithDst (dst);
+  //   }
 }
 
 void
