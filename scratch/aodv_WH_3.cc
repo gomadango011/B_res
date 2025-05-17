@@ -64,6 +64,10 @@ using namespace ns3;
 class AodvExample 
 {
 public:
+
+  //保存用のファイルを返す関数
+  std::string GetResultFile() const { return result_file; }
+
   AodvExample ();
   /**
    * \brief Configure script parameters
@@ -96,6 +100,21 @@ private:
   bool pcap;
   /// Print routes if true
   bool printRoutes;
+
+  //結果を保存するファイル
+  std::string result_file;
+
+  //結果を保存するモード
+  int result_mode;
+
+  //WHリンクの長さ
+  int WH_size;
+
+  //検知待機時間
+  double wait_time;
+
+  //エンド間の距離
+  int end_distance;
 
   uint32_t network_size;
 
@@ -218,18 +237,26 @@ int main (int argc, char **argv)
 
   test.Run ();
 
-  double RREQ_num = 0;
-    double RREP_num = 0;
-    double WHD_num = 0;
-    double WHR_num = 0;
-    double DC_num = 0;
+  //----------------------   ログ取得   --------------------
 
-    //検知率に関する変数
-    double DE_num = 0;
-    double WHDC_num = 0;
-    double WHDM_num = 0;
-    double DM_num = 0;
-    //double Flag_num =0;
+  //各メッセージのバイト数を保存する変数
+  double RREQ_num = 0;
+  double RREP_num = 0;
+  double WHD_Message_num = 0;
+  double WHR_Message_num = 0;
+
+  ///通常ノードを対象とした判定回数
+  double NJ_num = 0;
+  //WHノードを対象とした判定回数
+  double WHJ_num = 0;
+  //WHノードを検知した回数
+  double WHD_num = 0;
+  //正常なノードをWHノードと誤検知した回数
+  double DM_num = 0;
+  //経路作成時間の合計
+  Time RT_num = Time(0);
+  //経路作成時間を計測した回数
+  int time_count = 0;
 
     //ログ取得
     // 各ノードのAODVルーティングプロトコルインスタンスを取得し、トレースを設定
@@ -240,7 +267,7 @@ int main (int argc, char **argv)
         RREP_num = RREP_num + node->GetRREP();
         WHD_num = WHD_num + node->GetWHC();
         WHR_num = WHR_num + node->GetWHE();
-        DC_num = DC_num + node->GetDetCount();   //検知を行った回数
+        //DC_num = DC_num + node->GetDetCount();   //検知を行った回数
 
         //検知率の計測
         //DE_num = DE_num + node->GetDetectionEnd();         //検知を行った回数
@@ -337,7 +364,11 @@ AodvExample::AodvExample () :
   totalTime (40),
   pcap (true),
   printRoutes (false),
-  network_size(500)
+  network_size(500),
+  result_file("deff/p-log4"), //結果を保存するファイル
+  WH_size(250),
+  wait_time(0.5), //検知待機時間
+  end_distance(500) //エンド間の距離
 {
 }
 
@@ -366,6 +397,17 @@ AodvExample::Configure (int argc, char **argv)
   cmd.AddValue ("size", "Number of nodes.", size);
   cmd.AddValue ("time", "Simulation time, s.", totalTime);
   cmd.AddValue ("step", "Grid step, m", step);
+
+  cmd.AddValue("result_file", "result file", result_file);　//結果表示ようのファイル名を取得
+  cmd.AddValue("WH_size", "WH size", WH_size); //WHの長さ
+  cmd.AddValue("wait_time", "Detection wait time", wait_time); //検知待機時間
+  cmd.AddValue("end_distance", "end distance", end_distance); //エンド間の距離
+
+  if(end_distance < WH_size + 100)
+  {
+    std::cerr << "エンド間の距離がWHリンクの長さよりも短いです。" << std::endl;
+    return false;
+  }
 
   cmd.Parse (argc, argv);
   return true;
