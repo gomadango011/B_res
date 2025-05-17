@@ -265,47 +265,27 @@ int main (int argc, char **argv)
         Ptr<Node> node = *it;
         RREQ_num = RREQ_num + node->GetRREQ();
         RREP_num = RREP_num + node->GetRREP();
-        WHD_num = WHD_num + node->GetWHC();
-        WHR_num = WHR_num + node->GetWHE();
+        WHD_Message_num = WHD_Message_num + node->GetWHC();
+        WHR_Message_num = WHR_Message_num + node->GetWHE();
         //DC_num = DC_num + node->GetDetCount();   //検知を行った回数
 
-        //検知率の計測
-        //DE_num = DE_num + node->GetDetectionEnd();         //検知を行った回数
-        WHDC_num = WHDC_num + node->GetWHDetection();      //WH攻撃を対象とした検知回数
-        WHDM_num = WHDM_num + node->GetWHDetection_miss(); //WH攻撃を正常であると検知した回数
-        //DM_num = DM_num + node->GetDetecstion_miss();      //正常なノードをWh攻撃であると判定した回数
+         //通常ノードを対象とした検知回数
+        NJ_num = NJ_num + node->Get_Nomal_Node_Judge_Count();
+        //WHノードを対象とした検知回数
+        WHJ_num = WHJ_num + node->Get_WHJudge_Count();
+        //WHノードを検知した回数
+        WHD_num = WHD_num + node->Get_WHDetection_Count();
+        //正常なノードをWHノードと誤検知した回数
+        DM_num = DM_num + node->Get_Detecstion_miss_Count();
 
-        //送信したIDと受信したIDを比較し、受信IDが存在しなかった場合、カウント
-        std::vector<uint32_t> send_id = node->GetSendID();
-        std::vector<uint32_t> recv_id = node->GetRecvID(); 
-
-        //検知を行った回数
-        DE_num = DE_num + send_id.size();
-
-        for(size_t i = 0; i < send_id.size(); ++i)
+        for(size_t i = 0; i < node->Get_Routing_Time().size(); i++)
         {
-            auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
-
-            if(find == recv_id.end() /*&& i != send_id.size() - 1*/)
-            {
-                //送信したIDのメッセージを受信していない場合、誤検知としてカウント
-                DM_num = DM_num + 1;
-            }
+            RT_num = RT_num + node->Get_Routing_Time()[i];
         }
 
-        //WHリンクを検知しようとした回数
-        //Flag_num = Flag_num + node->GetFlag_Count();
-
-        //printf("node id: %d サイズ：　%d\n", node->GetId(), node->GetWHD());
+        //経路作成時間を計測した回数
+        time_count = time_count + node->Get_Routing_Time_Count();
     }
-
-    // //ログファイルオープン
-    // std::ofstream outputFile(uniqueDestination);
-    // if(!outputFile.is_open())
-    // {
-    //     std::cerr << "ログファイルが開けません" << std::endl;
-    //     return 1;
-    // }
 
     std::ofstream p_size(filename,std::ios::app);
   if(!p_size.is_open())
@@ -398,7 +378,7 @@ AodvExample::Configure (int argc, char **argv)
   cmd.AddValue ("time", "Simulation time, s.", totalTime);
   cmd.AddValue ("step", "Grid step, m", step);
 
-  cmd.AddValue("result_file", "result file", result_file);　//結果表示ようのファイル名を取得
+  cmd.AddValue("result_file", "result file", result_file); //結果表示ようのファイル名を取得
   cmd.AddValue("WH_size", "WH size", WH_size); //WHの長さ
   cmd.AddValue("wait_time", "Detection wait time", wait_time); //検知待機時間
   cmd.AddValue("end_distance", "end distance", end_distance); //エンド間の距離
