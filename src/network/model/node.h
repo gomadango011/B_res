@@ -122,31 +122,65 @@ public:
     /*
       検知率に関するデータ取得用関数
     */
-    //すべての検知回数を保存する関数
-    void SetDetectionEnd(int de);
 
-    //すべての検知回数を参照する関数
-    int GetDetectionEnd() const;
+    //通常ノードを判定した回数
+    void Set_Nomal_Node_Judge_Count(int de);
+
+    //通常ノードを判定した回数を取得する関数
+    int Get_Nomal_Node_Judge_Count() const;
 
     //WH攻撃を対象とした検知回数
-    void SetWHDetection(int whdc);
+    void Set_WHJudge_Count(int whdc);
     
-    int GetWHDetection() const;
+    int Get_WHJudge_Count() const;
 
-    //WH攻撃を正常であると検知した回数
-    void SetWHDetection_miss(int whdm);
+    //WH攻撃を正常に検知した回数
+    void Set_WHDetection_Count(int whdm);
 
-    int GetWHDetection_miss() const;
+    int Get_WHDetection_Count() const;
 
     //正常なリンクをWHリンクと誤検知した回数
-    void SetDetection_miss(int dm);
+    void Set_Detection_miss_Count(int dm);
 
-    int GetDetecstion_miss() const;
+    int Get_Detecstion_miss_Count() const;
 
-    //WHを検知しようとした回数をカウントする変数
-    void SetFlag_Count(int flag);
+    //経路作成時間を保持する変数
+    void Set_Routing_Time(Time t);
 
-    int GetFlag_Count() const;
+    std::vector<Time> Get_Routing_Time() const;
+
+    //経路作成時間を計測した回数
+    void Increment_Routing_Time_Count();
+
+    uint32_t Get_Routing_Time_Count() const;
+
+
+
+    // //すべての検知回数を保存する関数
+    // void SetDetectionEnd(int de);
+
+    // //すべての検知回数を参照する関数
+    // int GetDetectionEnd() const;
+
+    // //WH攻撃を対象とした検知回数
+    // void SetWHDetection(int whdc);
+    
+    // int GetWHDetection() const;
+
+    // //WH攻撃を正常であると検知した回数
+    // void SetWHDetection_miss(int whdm);
+
+    // int GetWHDetection_miss() const;
+
+    // //正常なリンクをWHリンクと誤検知した回数
+    // void SetDetection_miss(int dm);
+
+    // int GetDetecstion_miss() const;
+
+    // //WHを検知しようとした回数をカウントする変数
+    // void SetFlag_Count(int flag);
+
+    // int GetFlag_Count() const;
 
     //送信したID
     void AddSendID(uint32_t s_id);

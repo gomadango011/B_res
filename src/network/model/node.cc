@@ -199,6 +199,69 @@ Node::GetDetCount()
 }
 
 //検知率に関する関数
+
+//-----------------------------------------------------------------------------
+//通常ノードを判定した回数
+void 
+Node::Set_Nomal_Node_Judge_Count(int de)
+{
+    NJC_num = de;
+}
+
+int
+Node::Get_Nomal_Node_Judge_Count() const
+{
+    return NJC_num;
+}
+//------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+//WH攻撃を対象とした検知回数
+void
+Node::Set_WHJudge_Count(int whdc)
+{
+    WHJC_num = whdc;
+}
+
+int
+Node::Get_WHJudge_Count() const
+{
+    return WHJC_num;
+}
+//------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+//WH攻撃を正常であると検知した回数
+void
+Node::Set_WHDetection_Count(int whd)
+{
+    WHD_count = whd;
+}
+
+int
+Node::Get_WHDetection_Count() const
+{
+    return WHD_count;
+}
+//------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+//正常なリンクをWHリンクと誤検知した回数
+void
+Node::Set_Detection_miss_Count(int dm)
+{
+    DM_num = dm;
+}
+
+int
+Node::Get_Detecstion_miss_Count() const
+{
+    return DM_num;
+}
+//-------------------------------------------------------------------------------
+
+
+
 void 
 Node::SetDetectionEnd(int de)
 {
