@@ -135,9 +135,9 @@ public:
     int Get_WHJudge_Count() const;
 
     //WH攻撃を正常に検知した回数
-    void Set_WHDetection_Count(int whdm);
+    void Set_WHDetection_miss_Count(int whdm);
 
-    int Get_WHDetection_Count() const;
+    int Get_WHDetection_miss_Count() const;
 
     //正常なリンクをWHリンクと誤検知した回数
     void Set_Detection_miss_Count(int dm);
@@ -395,18 +395,37 @@ private:
   int DC_num;
 
   //検知率に関する変数
-    int DE_num;
-    int WHDC_num;
-    int WHDM_num;
+     //通常ノードを判定した回数
+    int NJC_num;
+
+    //WH攻撃を対象とした検知回数
+    int WHJC_num;
+
+    //WH攻撃を正常に検知した回数
+    int WHD_count;
+
+    //正常なリンクをWHリンクと誤検知した回数
     int DM_num;
 
     //WHを検知しようとした回数をカウントする変数
     int Flag_Count_num;
 
+    //正常にWH攻撃を検知した回数
+    int Detection_WH;
+
+    //WHを検知しようとした回数をカウントする変数
+    //int Flag_Count_num;
+
     //送信した検知メッセージのID
     std::vector<uint32_t> send_ID;
     //受信した検知メッセージのID
     std::vector<uint32_t> recv_ID;
+
+    //経路作成時間を保持する変数
+    std::vector<Time> m_routing_time;
+
+    //経路作成時間を計測した回数
+    uint32_t m_routing_time_count;
 };
 
 } // namespace ns3

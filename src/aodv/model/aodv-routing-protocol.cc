@@ -68,6 +68,20 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingProtocol);
 /// UDP Port for AODV control traffic
 const uint32_t RoutingProtocol::AODV_PORT = 654;
 
+//RREQを送信した時間とメッセージIDを保存するための構造体
+struct rreq_info
+{
+    //RREQを送信した時間
+    Time rreq_time;
+
+    //RREQのメッセージID
+    uint32_t rreq_id;
+};
+
+
+//RREQを送信した時間を保持するためのリスト
+std::vector<struct rreq_info> rreq_list;
+
 /**
 * \ingroup aodv
 * \brief Tag used by AODV implementation
@@ -1243,6 +1257,16 @@ RoutingProtocol::SendRequest (Ipv4Address dst) //RREQを送信する
 
   node_count->SetRREQ(node_count->GetRREQ() + /*p->GetSize()*/ 32);
 
+  //経路作成時間を取得するためにRREQ送信時間を記録
+    struct rreq_info request_time
+    {
+        /*RREQを送信した時間*/Simulator::Now(),
+        /*リクエストID*/ m_requestId
+    };
+
+  //RREQ送信時間リストに保存する
+  rreq_list.push_back(request_time);
+
   //再ブロードキャストのためにコメントアウト
   //ScheduleRreqRetry (dst);
 
@@ -1396,13 +1420,15 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
     //フラグを設定
     WHCheckHeader.SetWH_Flag(1);
 
-    ofs << "WHフラグをたてました" << std::endl;
-
-    node_count->SetWHDetection(node_count->GetWHDetection() + 1);
+    //判定対象がWHリンク
+    node_count -> Set_WHJudge_Count(node_count->Get_WHJUdge_Count() + 1);
   }
   else
   {
     WHCheckHeader.SetWH_Flag(0);
+
+    //判定対象が正常なリンク
+    node_count -> Set_Nomal_Node_Judge_Count(node_count->Get_Nomal_Node_Judge_Count() + 1);
 
     //送信したノードIDを保存
     node_count->AddSendID(WHCheckHeader.GetId());
@@ -2530,7 +2556,7 @@ RoutingProtocol::SendReply (RreqHeader const & rreqHeader, RoutingTableEntry con
   rrep_id++;
 
   RrepHeader rrepHeader ( /*prefixSize=*/ 0, /*hops=*/ 0, /*dst=*/ rreqHeader.GetDst (),
-                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id);
+                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id, /*RREQのID*/);
 
   //printf("RREP送信時のFirst Hop: %u\n", toOrigin.GetNextHop().Get ());
 
@@ -2823,13 +2849,30 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
     {
       rrep_count++;
       
-      printf("---------------RREPが目的地に到着---------------:%d　　ID:%d\n", rrep_count, rrepHeader.Getid());
+      //printf("---------------RREPが目的地に到着---------------:%d　　ID:%d\n", rrep_count, rrepHeader.Getid());
 
       std::cout << "RREQの送信元ノードID" << rrepHeader.GetOrigin() <<std::endl;
 
       // exit(0);
 
       //RouteRequestTimerExpire(Ipv4Address(rrepHeader.GetDst()));
+
+      auto node_id= m_ipv4->GetObject<Node> ()->GetId();
+      auto node_count = m_ipv4->GetObject<Node> ();
+
+      //ノードID＝0のとき　→　経路作成時間を取得する
+      if(node_id == 0)
+      {
+          for(int i = 0; i < rreq_list.size(); i++)
+          {   
+              if(rreq_list[i].rreq_id == rrepHeader.GetMessageID())
+              {
+                  node_count->Set_Routing_Time(Simulator::Now() - rreq_list[i].rreq_time);
+                  node_count->Increment_Routing_Time_Count();
+                  break;
+              }
+          }
+      }
 
       return;
 
@@ -3083,7 +3126,7 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
         if(WHEndHeader.GetWH_Flag() == 1)
         {
           //WH攻撃を正常なノードと判定した
-          node_count->SetWHDetection_miss(node_count->GetWHDetection_miss() +1);
+          node_count->Set_WHDetection_miss_Count(node_count->Get_WHDetection_miss_Count() +1);
         }
         else{
           //受信したIDを保存

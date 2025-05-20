@@ -85,9 +85,12 @@ Node::Node()
     WHC_num(0),
     WHE_num(0),
     DC_num(0),
-    DE_num(0),
-    WHDC_num(0),
-    WHDM_num(0),
+    // DE_num(0),
+    // WHDC_num(0),
+    // WHDM_num(0),
+    NJC_num(0),
+    WHJC_num(0),
+    WHD_count(0),
     DM_num(0),
     Flag_Count_num(0),
     send_ID(null_list),
@@ -233,13 +236,13 @@ Node::Get_WHJudge_Count() const
 //----------------------------------------------------------------------------
 //WH攻撃を正常であると検知した回数
 void
-Node::Set_WHDetection_Count(int whd)
+Node::Set_WHDetection_miss_Count(int whd)
 {
     WHD_count = whd;
 }
 
 int
-Node::Get_WHDetection_Count() const
+Node::Get_WHDetection_miss_Count() const
 {
     return WHD_count;
 }
@@ -261,66 +264,95 @@ Node::Get_Detecstion_miss_Count() const
 //-------------------------------------------------------------------------------
 
 
-
-void 
-Node::SetDetectionEnd(int de)
-{
-    DE_num = de;
-}
-
-int
-Node::GetDetectionEnd() const
-{
-    return DE_num;
-}
-
+//------------------------------------------------------------------------------
+//経路作成時間を保持する変数
 void
-Node::SetWHDetection(int whdc)
+Node::Set_Routing_Time(Time t)
 {
-    WHDC_num = whdc;
+    m_routing_time.push_back(t);
 }
 
-int
-Node::GetWHDetection() const
+std::vector<Time>
+Node::Get_Routing_Time() const
 {
-    return WHDC_num;
+    return m_routing_time;
 }
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+//経路作成時間を計測した回数
 void
-Node::SetWHDetection_miss(int whdm)
+Node::Increment_Routing_Time_Count()
 {
-    WHDM_num = whdm;
+    m_routing_time_count++;
 }
 
-int
-Node::GetWHDetection_miss() const
+uint32_t
+Node::Get_Routing_Time_Count() const
 {
-    return WHDM_num;
+    return m_routing_time_count;
 }
+//------------------------------------------------------------------------------
 
-void
-Node::SetDetection_miss(int dm)
-{
-    DM_num = dm;
-}
+// void 
+// Node::SetDetectionEnd(int de)
+// {
+//     DE_num = de;
+// }
 
-int
-Node::GetDetecstion_miss() const
-{
-    return DM_num;
-}
+// int
+// Node::GetDetectionEnd() const
+// {
+//     return DE_num;
+// }
 
-void
-Node::SetFlag_Count(int flag)
-{
-    Flag_Count_num = flag;
-}
+// void
+// Node::SetWHDetection(int whdc)
+// {
+//     WHDC_num = whdc;
+// }
 
-int
-Node::GetFlag_Count() const
-{
-    return Flag_Count_num;
-}
+// int
+// Node::GetWHDetection() const
+// {
+//     return WHDC_num;
+// }
+
+// void
+// Node::SetWHDetection_miss(int whdm)
+// {
+//     WHDM_num = whdm;
+// }
+
+// int
+// Node::GetWHDetection_miss() const
+// {
+//     return WHDM_num;
+// }
+
+// void
+// Node::SetDetection_miss(int dm)
+// {
+//     DM_num = dm;
+// }
+
+// int
+// Node::GetDetecstion_miss() const
+// {
+//     return DM_num;
+// }
+
+// void
+// Node::SetFlag_Count(int flag)
+// {
+//     Flag_Count_num = flag;
+// }
+
+// int
+// Node::GetFlag_Count() const
+// {
+//     return Flag_Count_num;
+// }
 
 //送信した検知メッセージのID
 void
