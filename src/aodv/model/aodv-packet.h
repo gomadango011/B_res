@@ -656,7 +656,7 @@ public:
    */
   RrepHeader (uint8_t prefixSize = 0, uint8_t hopCount = 0, Ipv4Address dst =
                 Ipv4Address (), uint32_t dstSeqNo = 0, Ipv4Address origin =
-                Ipv4Address (), Time lifetime = MilliSeconds (0), uint8_t id = 0);
+                Ipv4Address (), Time lifetime = MilliSeconds (0), uint8_t id = 0, uint8_t rreq=id = 0);
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -754,6 +754,16 @@ public:
     return m_id;
   }
 
+  //RREQIDを設定&取得
+  void SetRREPid (uint8_t rrepid)
+  {
+    m_rrepid = rrepid;
+  }
+  uint8_t GetRREPid() const
+  {
+    return m_rrepid;
+  }
+
   // Flags
   /**
    * \brief Set the ack required flag
@@ -800,6 +810,7 @@ private:
   Ipv4Address   m_origin;           ///< Source IP Address
   uint32_t      m_lifeTime;         ///< Lifetime (in milliseconds)
   uint8_t       m_id;
+  uint8_t       m_rrepid;           ///< RREQ ID
 };
 
 /**

@@ -2087,41 +2087,41 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
    */
   RoutingTableEntry toDst;
   Ipv4Address dst = rreqHeader.GetDst ();
-//   if (m_routingTable.LookupRoute (dst, toDst))
-//     { 
+  if (m_routingTable.LookupRoute (dst, toDst))
+    { 
 
-//       /*
-//        * RREQをドロップすると、このノードのRREPはループする。
-//        */
-//       if (toDst.GetNextHop () == src)id
-//         {
-//           NS_LOG_DEBUG ("Drop RREQ from " << src << ", dest next hop " << toDst.GetNextHop ());
-//           return;
-//         }
-//       /*
-//        * 要求された宛先の宛先シーケンス番号は、RREQメッセージで受信した対応する値と、
-//        　要求された宛先のノードが現在保持している宛先シーケンス値の最大値に 設定される。
-// 　　　　 ただし、転送ノードは、受信したRREQメッセージで受信した宛先シークエンス番号の値が
-// 　　　　 以下の値であっても、そのノードが保持している宛先シーケンス番号の値を変更してはならない[MUST NOT]。
-//          受信RREQで受信した値が、転送ノードが現在保持している値よりも大きい場合であっても、
-//          転送ノードは宛先シーケンス番号の保持値を変更してはならない。
-//        */
-//       if ((rreqHeader.GetUnknownSeqno () ||
-//            (int32_t (toDst.GetSeqNo ()) - int32_t (rreqHeader.GetDstSeqno ()) >= 0)) &&
-//           toDst.GetValidSeqNo ())
-//         {
-//           if (!rreqHeader.GetDestinationOnly () && toDst.GetFlag () == VALID)
-//             {
-//               m_routingTable.LookupRoute (origin, toOrigin);
-//               //中継ノードからのRREP送信
-//               //SendReplyByIntermediateNode (toDst, toOrigin, rreqHeader.GetGratuitousRrep ());
-//               //SendWHCheck(origin);
-//               return;
-//             }
-//           rreqHeader.SetDstSeqno (toDst.GetSeqNo ());
-//           rreqHeader.SetUnknownSeqno (false);
-//         }
-//     }
+      /*
+       * RREQをドロップすると、このノードのRREPはループする。
+       */
+      if (toDst.GetNextHop () == src)id
+        {
+          NS_LOG_DEBUG ("Drop RREQ from " << src << ", dest next hop " << toDst.GetNextHop ());
+          return;
+        }
+      /*
+       * 要求された宛先の宛先シーケンス番号は、RREQメッセージで受信した対応する値と、
+       　要求された宛先のノードが現在保持している宛先シーケンス値の最大値に 設定される。
+　　　　 ただし、転送ノードは、受信したRREQメッセージで受信した宛先シークエンス番号の値が
+　　　　 以下の値であっても、そのノードが保持している宛先シーケンス番号の値を変更してはならない[MUST NOT]。
+         受信RREQで受信した値が、転送ノードが現在保持している値よりも大きい場合であっても、
+         転送ノードは宛先シーケンス番号の保持値を変更してはならない。
+       */
+      if ((rreqHeader.GetUnknownSeqno () ||
+           (int32_t (toDst.GetSeqNo ()) - int32_t (rreqHeader.GetDstSeqno ()) >= 0)) &&
+          toDst.GetValidSeqNo ())
+        {
+          if (!rreqHeader.GetDestinationOnly () && toDst.GetFlag () == VALID)
+            {
+              m_routingTable.LookupRoute (origin, toOrigin);
+              //中継ノードからのRREP送信
+              //SendReplyByIntermediateNode (toDst, toOrigin, rreqHeader.GetGratuitousRrep ());
+              //SendWHCheck(origin);
+              return;
+            }
+          rreqHeader.SetDstSeqno (toDst.GetSeqNo ());
+          rreqHeader.SetUnknownSeqno (false);
+        }
+    }
 
   SocketIpTtlTag tag;
   p->RemovePacketTag (tag);
@@ -2556,7 +2556,7 @@ RoutingProtocol::SendReply (RreqHeader const & rreqHeader, RoutingTableEntry con
   rrep_id++;
 
   RrepHeader rrepHeader ( /*prefixSize=*/ 0, /*hops=*/ 0, /*dst=*/ rreqHeader.GetDst (),
-                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id, /*RREQのID*/);
+                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id, /*RREQのID*/rreqHeader.GetId());
 
   //printf("RREP送信時のFirst Hop: %u\n", toOrigin.GetNextHop().Get ());
 
@@ -2679,9 +2679,11 @@ RoutingProtocol::SendReplyByIntermediateNode (RoutingTableEntry &toDst, RoutingT
                                               bool gratRep)
 {
   NS_LOG_FUNCTION (this);
+  rrep_id++;
   RrepHeader rrepHeader (/*prefix size=*/0, /*hops=*/toDst.GetHop (),
                          /*dst=*/toDst.GetDestination (), /*dst seqno=*/toDst.GetSeqNo (),
-                         /*origin=*/toOrigin.GetDestination (), /*lifetime=*/toDst.GetLifeTime ());
+                         /*origin=*/toOrigin.GetDestination (), /*lifetime=*/toDst.GetLifeTime (),
+                         /*id*/ rrep_id, /*RREQのID*/toOrigin.GetRreqId ());
   /* RREQを受信したノードが隣接ノードであった場合、我々は次のようになる。
   　おそらく一方向リンクに直面している...。RREP-ackをリクエストする
    */

@@ -692,14 +692,15 @@ operator<< (std::ostream & os, WHEndHeader const & h)
 //-----------------------------------------------------------------------------
 
 RrepHeader::RrepHeader (uint8_t prefixSize, uint8_t hopCount, Ipv4Address dst,
-                        uint32_t dstSeqNo, Ipv4Address origin, Time lifeTime, uint8_t id)
+                        uint32_t dstSeqNo, Ipv4Address origin, Time lifeTime, uint8_t id, uint8_t rrepid)
   : m_flags (0),
     m_prefixSize (prefixSize),
     m_hopCount (hopCount),
     m_dst (dst),
     m_dstSeqNo (dstSeqNo),
     m_origin (origin),
-    m_id (id)
+    m_id (id),
+    m_rrepid (rrepid)
       
 {
   m_lifeTime = uint32_t (lifeTime.GetMilliSeconds ());
@@ -727,7 +728,8 @@ RrepHeader::GetInstanceTypeId () const
 uint32_t
 RrepHeader::GetSerializedSize () const
 {
-  return 20;
+  return 21;
+  //return 20;
   // return 19;
 }
 
@@ -742,6 +744,7 @@ RrepHeader::Serialize (Buffer::Iterator i) const
   WriteTo (i, m_origin);
   i.WriteHtonU32 (m_lifeTime);
   i.WriteU8 (m_id);
+  i.WriteU8 (m_rrepid);
 }
 
 uint32_t
@@ -757,6 +760,7 @@ RrepHeader::Deserialize (Buffer::Iterator start)
   ReadFrom (i, m_origin);
   m_lifeTime = i.ReadNtohU32 ();
   m_id = i.ReadU8 ();
+  m_rrepid = i.ReadU8 ();
 
   uint32_t dist = i.GetDistanceFrom (start);
   NS_ASSERT (dist == GetSerializedSize ());
@@ -838,6 +842,7 @@ RrepHeader::SetHello (Ipv4Address origin, uint32_t srcSeqNo, Time lifetime)
   m_origin = origin;
   m_lifeTime = lifetime.GetMilliSeconds ();
   m_id = 0;
+  m_rrepid = 0;
 }
 
 std::ostream &
