@@ -1355,6 +1355,9 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
       WHCheckHeader.SetDst (rrepHeader.GetDst ());//rrepのソースノード
       WHCheckHeader.SetWHF(1);
       WHCheckHeader.SetRREPid(rrepHeader.Getid());
+      //RREQのIDを設定
+      WHCheckHeader.SetRREQID(rrepHeader.GetRREQid());
+
     }
     else
     {
@@ -1421,7 +1424,7 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
     WHCheckHeader.SetWH_Flag(1);
 
     //判定対象がWHリンク
-    node_count -> Set_WHJudge_Count(node_count->Get_WHJUdge_Count() + 1);
+    node_count -> Set_WHJudge_Count(node_count->Get_WHJudge_Count() + 1);
   }
   else
   {
@@ -2093,7 +2096,7 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
       /*
        * RREQをドロップすると、このノードのRREPはループする。
        */
-      if (toDst.GetNextHop () == src)id
+      if (toDst.GetNextHop () == src)
         {
           NS_LOG_DEBUG ("Drop RREQ from " << src << ", dest next hop " << toDst.GetNextHop ());
           return;
@@ -2114,7 +2117,7 @@ RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
             {
               m_routingTable.LookupRoute (origin, toOrigin);
               //中継ノードからのRREP送信
-              //SendReplyByIntermediateNode (toDst, toOrigin, rreqHeader.GetGratuitousRrep ());
+              SendReplyByIntermediateNode (toDst, toOrigin, rreqHeader.GetGratuitousRrep (), rreqHeader.GetId());
               //SendWHCheck(origin);
               return;
             }
@@ -2643,7 +2646,8 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
                          /*dstSeqNo=*/m_seqNo, /*origin=*/toOrigin.GetDestination (),//WHCEパケットの目的地
                          /*srcノードのIPアドレス*/WHCheckHeader.GetSrc (),
                          /*aodvのdst*/ WHCheckHeader.GetDst(), /*lifeTime=*/m_myRouteTimeout, rrepid,
-                         WHCheckHeader.GetWH_Flag()
+                         WHCheckHeader.GetWH_Flag(),
+                         /*RREQのID*/WHCheckHeader.GetRREQID()
                          );
   
   //Ipv4Address ori1 = WHEndHeader.GetOrigin ();
@@ -2676,14 +2680,14 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
 //中間ノードでRREPを送信
 void
 RoutingProtocol::SendReplyByIntermediateNode (RoutingTableEntry &toDst, RoutingTableEntry &toOrigin,
-                                              bool gratRep)
+                                              bool gratRep, uint32_t rreq_id)
 {
   NS_LOG_FUNCTION (this);
   rrep_id++;
   RrepHeader rrepHeader (/*prefix size=*/0, /*hops=*/toDst.GetHop (),
                          /*dst=*/toDst.GetDestination (), /*dst seqno=*/toDst.GetSeqNo (),
                          /*origin=*/toOrigin.GetDestination (), /*lifetime=*/toDst.GetLifeTime (),
-                         /*id*/ rrep_id, /*RREQのID*/toOrigin.GetRreqId ());
+                         /*id*/ rrep_id, /*RREQのID*/rreq_id);
   /* RREQを受信したノードが隣接ノードであった場合、我々は次のようになる。
   　おそらく一方向リンクに直面している...。RREP-ackをリクエストする
    */
@@ -2865,9 +2869,9 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
       //ノードID＝0のとき　→　経路作成時間を取得する
       if(node_id == 0)
       {
-          for(int i = 0; i < rreq_list.size(); i++)
+          for(size_t i = 0; i < rreq_list.size(); i++)
           {   
-              if(rreq_list[i].rreq_id == rrepHeader.GetMessageID())
+              if(rreq_list[i].rreq_id == rrepHeader.GetRREQid())
               {
                   node_count->Set_Routing_Time(Simulator::Now() - rreq_list[i].rreq_time);
                   node_count->Increment_Routing_Time_Count();
@@ -3145,7 +3149,8 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
 
       RrepHeader rrepHeader ( /*prefixSize=*/ 0, /*hops=*/ 0, /*dst=*/ WHEndHeader.GetAov_Dst(),
                               /*dstSeqNo=*/ m_seqNo, /*origin=*/ toSrc.GetDestination (),
-                              /*lifeTime=*/ m_myRouteTimeout, WHEndHeader.GetRREPid());
+                              /*lifeTime=*/ m_myRouteTimeout, WHEndHeader.GetRREPid(),
+                              /*RREQのID*/WHEndHeader.GetRREQID());
 
       //printf("RREPを送信　ID:%d\n", rrepHeader.Getid());
 

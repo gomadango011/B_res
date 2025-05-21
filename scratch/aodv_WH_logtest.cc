@@ -186,146 +186,146 @@ NodeContainer nodes;
 
 int main (int argc, char **argv)
 {
-  //file 削除と作製
-  remove("sample.txt");
-  std::ofstream MyFile("sample.txt");
+  // //file 削除と作製
+  // remove("sample.txt");
+  // std::ofstream MyFile("sample.txt");
 
-  remove("WH_count.txt");
-  std::ofstream MyFile2("WH_count.txt");
+  // remove("WH_count.txt");
+  // std::ofstream MyFile2("WH_count.txt");
 
-   //file 削除と作製
-  remove("com_num.txt");
-  std::ofstream MyFile3("com_num.txt");
+  //  //file 削除と作製
+  // remove("com_num.txt");
+  // std::ofstream MyFile3("com_num.txt");
 
-  filename = GenerateUniqueFilename(def);
+  // filename = GenerateUniqueFilename(def);
 
-  //絶対パスを取得
-  //auto absPath = std::filesystem::absolute(p_file);
+  // //絶対パスを取得
+  // //auto absPath = std::filesystem::absolute(p_file);
 
-  std::cout << filename << std::endl;
-  std::ofstream p_log(filename);
-  if(!p_log.is_open())
-  {
-      std::cerr << "ログファイルが開けません!" << std::endl;
-      return 1;
-  }
+  // std::cout << filename << std::endl;
+  // std::ofstream p_log(filename);
+  // if(!p_log.is_open())
+  // {
+  //     std::cerr << "ログファイルが開けません!" << std::endl;
+  //     return 1;
+  // }
 
-  p_log.close();
+  // p_log.close();
 
-  AodvExample test;
-  if (!test.Configure (argc, argv))
-    NS_FATAL_ERROR ("Configuration failed. Aborted.");
+  // AodvExample test;
+  // if (!test.Configure (argc, argv))
+  //   NS_FATAL_ERROR ("Configuration failed. Aborted.");
 
-  test.Run ();
+  // test.Run ();
 
-  double RREQ_num = 0;
-    double RREP_num = 0;
-    double WHD_num = 0;
-    double WHR_num = 0;
-    double DC_num = 0;
+  // double RREQ_num = 0;
+  //   double RREP_num = 0;
+  //   double WHD_num = 0;
+  //   double WHR_num = 0;
+  //   double DC_num = 0;
 
-    //検知率に関する変数
-    double DE_num = 0;
-    double WHDC_num = 0;
-    double WHDM_num = 0;
-    double DM_num = 0;
-    //double Flag_num =0;
+  //   //検知率に関する変数
+  //   double DE_num = 0;
+  //   double WHDC_num = 0;
+  //   double WHDM_num = 0;
+  //   double DM_num = 0;
+  //   //double Flag_num =0;
 
-    //ログ取得
-    // 各ノードのAODVルーティングプロトコルインスタンスを取得し、トレースを設定
-    for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
-    {
-        Ptr<Node> node = *it;
-        RREQ_num = RREQ_num + node->GetRREQ();
-        RREP_num = RREP_num + node->GetRREP();
-        WHD_num = WHD_num + node->GetWHC();
-        WHR_num = WHR_num + node->GetWHE();
-        DC_num = DC_num + node->GetDetCount();   //検知を行った回数
+  //   //ログ取得
+  //   // 各ノードのAODVルーティングプロトコルインスタンスを取得し、トレースを設定
+  //   for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
+  //   {
+  //       Ptr<Node> node = *it;
+  //       RREQ_num = RREQ_num + node->GetRREQ();
+  //       RREP_num = RREP_num + node->GetRREP();
+  //       WHD_num = WHD_num + node->GetWHC();
+  //       WHR_num = WHR_num + node->GetWHE();
+  //       DC_num = DC_num + node->GetDetCount();   //検知を行った回数
 
-        //検知率の計測
-        //DE_num = DE_num + node->GetDetectionEnd();         //検知を行った回数
-        WHDC_num = WHDC_num + node->GetWHDetection();      //WH攻撃を対象とした検知回数
-        WHDM_num = WHDM_num + node->GetWHDetection_miss(); //WH攻撃を正常であると検知した回数
-        //DM_num = DM_num + node->GetDetecstion_miss();      //正常なノードをWh攻撃であると判定した回数
+  //       //検知率の計測
+  //       //DE_num = DE_num + node->GetDetectionEnd();         //検知を行った回数
+  //       WHDC_num = WHDC_num + node->GetWHDetection();      //WH攻撃を対象とした検知回数
+  //       WHDM_num = WHDM_num + node->GetWHDetection_miss(); //WH攻撃を正常であると検知した回数
+  //       //DM_num = DM_num + node->GetDetecstion_miss();      //正常なノードをWh攻撃であると判定した回数
 
-        //送信したIDと受信したIDを比較し、受信IDが存在しなかった場合、カウント
-        std::vector<uint32_t> send_id = node->GetSendID();
-        std::vector<uint32_t> recv_id = node->GetRecvID(); 
+  //       //送信したIDと受信したIDを比較し、受信IDが存在しなかった場合、カウント
+  //       std::vector<uint32_t> send_id = node->GetSendID();
+  //       std::vector<uint32_t> recv_id = node->GetRecvID(); 
 
-        //検知を行った回数
-        DE_num = DE_num + send_id.size();
+  //       //検知を行った回数
+  //       DE_num = DE_num + send_id.size();
 
-        for(size_t i = 0; i < send_id.size(); ++i)
-        {
-            auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
+  //       for(size_t i = 0; i < send_id.size(); ++i)
+  //       {
+  //           auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
 
-            if(find == recv_id.end() /*&& i != send_id.size() - 1*/)
-            {
-                //送信したIDのメッセージを受信していない場合、誤検知としてカウント
-                DM_num = DM_num + 1;
-            }
-        }
+  //           if(find == recv_id.end() /*&& i != send_id.size() - 1*/)
+  //           {
+  //               //送信したIDのメッセージを受信していない場合、誤検知としてカウント
+  //               DM_num = DM_num + 1;
+  //           }
+  //       }
 
-        //WHリンクを検知しようとした回数
-        //Flag_num = Flag_num + node->GetFlag_Count();
+  //       //WHリンクを検知しようとした回数
+  //       //Flag_num = Flag_num + node->GetFlag_Count();
 
-        //printf("node id: %d サイズ：　%d\n", node->GetId(), node->GetWHD());
-    }
+  //       //printf("node id: %d サイズ：　%d\n", node->GetId(), node->GetWHD());
+  //   }
 
-    // //ログファイルオープン
-    // std::ofstream outputFile(uniqueDestination);
-    // if(!outputFile.is_open())
-    // {
-    //     std::cerr << "ログファイルが開けません" << std::endl;
-    //     return 1;
-    // }
+  //   // //ログファイルオープン
+  //   // std::ofstream outputFile(uniqueDestination);
+  //   // if(!outputFile.is_open())
+  //   // {
+  //   //     std::cerr << "ログファイルが開けません" << std::endl;
+  //   //     return 1;
+  //   // }
 
-    std::ofstream p_size(filename,std::ios::app);
-  if(!p_size.is_open())
-  {
-      std::cerr << "書き込み用ログファイルが開けません!" << std::endl;
-      return 1;
-  }
+  //   std::ofstream p_size(filename,std::ios::app);
+  // if(!p_size.is_open())
+  // {
+  //     std::cerr << "書き込み用ログファイルが開けません!" << std::endl;
+  //     return 1;
+  // }
 
-    //ファイルに書き込む
-    // p_size << "RREQ: " << RREQ_num << std::endl;
-    // p_size << "RREP: " << RREP_num << std::endl;
-    // p_size << "WHD: " << WHD_num << std::endl;
-    // p_size << "WHR: " << WHR_num << std::endl;
-    // p_size << "WH SUM: " << WHD_num + WHR_num << std::endl;
-    // p_size << "SUM: " << RREQ_num + RREP_num + WHD_num + WHR_num << std::endl;
-    // p_size << "WH_SUM/RREP" << (WHD_num + WHR_num) / RREP_num << std::endl;
-    // p_size << "一回の検知に使用した平均パケットサイズ" << (WHD_num + WHR_num) / DC_num << std::endl;
+  //   //ファイルに書き込む
+  //   // p_size << "RREQ: " << RREQ_num << std::endl;
+  //   // p_size << "RREP: " << RREP_num << std::endl;
+  //   // p_size << "WHD: " << WHD_num << std::endl;
+  //   // p_size << "WHR: " << WHR_num << std::endl;
+  //   // p_size << "WH SUM: " << WHD_num + WHR_num << std::endl;
+  //   // p_size << "SUM: " << RREQ_num + RREP_num + WHD_num + WHR_num << std::endl;
+  //   // p_size << "WH_SUM/RREP" << (WHD_num + WHR_num) / RREP_num << std::endl;
+  //   // p_size << "一回の検知に使用した平均パケットサイズ" << (WHD_num + WHR_num) / DC_num << std::endl;
 
-    // p_size << "検知を行った回数: " << DE_num << std::endl;
-    // p_size << "WH攻撃を対象とした検知回数: " << WHDC_num << std::endl;
-    // p_size << "WH攻撃を正常であると検知した回数: " << WHDM_num << std::endl;
-    // p_size << "正常なノードをWh攻撃であると判定した回数: " <<  DM_num<< std::endl;
+  //   // p_size << "検知を行った回数: " << DE_num << std::endl;
+  //   // p_size << "WH攻撃を対象とした検知回数: " << WHDC_num << std::endl;
+  //   // p_size << "WH攻撃を正常であると検知した回数: " << WHDM_num << std::endl;
+  //   // p_size << "正常なノードをWh攻撃であると判定した回数: " <<  DM_num<< std::endl;
 
-    // //WHリンクを検知しようとした回数
-    // p_size << "フラグを立てた回数: " << Flag_num << std::endl;
+  //   // //WHリンクを検知しようとした回数
+  //   // p_size << "フラグを立てた回数: " << Flag_num << std::endl;
 
-    // p_size << "誤検知率: " << DM_num / DE_num << std::endl;
-    // p_size << "検知率: " << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
+  //   // p_size << "誤検知率: " << DM_num / DE_num << std::endl;
+  //   // p_size << "検知率: " << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
 
-    p_size << "WH攻撃を対象とした検知回数" << WHDC_num << std::endl;
-    p_size << "すべての検知回数" <<  DC_num<< std::endl;
-    p_size << "検知率" << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
-    p_size << "誤検知率" << DM_num/(DC_num - WHDC_num) << std::endl;
-    p_size << "検知コスト" << (WHD_num + WHR_num) / DC_num << std::endl;
+  //   p_size << "WH攻撃を対象とした検知回数" << WHDC_num << std::endl;
+  //   p_size << "すべての検知回数" <<  DC_num<< std::endl;
+  //   p_size << "検知率" << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
+  //   p_size << "誤検知率" << DM_num/(DC_num - WHDC_num) << std::endl;
+  //   p_size << "検知コスト" << (WHD_num + WHR_num) / DC_num << std::endl;
 
-    p_size << "ネットワークのすべて検知コスト" << WHD_num + WHR_num << std::endl;
+  //   p_size << "ネットワークのすべて検知コスト" << WHD_num + WHR_num << std::endl;
 
-    p_size << "検知メッセージの総数" << WHD_num/38 << std::endl;
-    p_size << "結果メッセージの総数" << WHR_num/32 << std::endl;
-    p_size << "1検知あたりの検知メッセージの数: " << (WHD_num/35)  / DC_num << std::endl;
-    p_size << "1検知あたりの結果メッセージの数: " << (WHR_num/32)  / DC_num << std::endl;
+  //   p_size << "検知メッセージの総数" << WHD_num/38 << std::endl;
+  //   p_size << "結果メッセージの総数" << WHR_num/32 << std::endl;
+  //   p_size << "1検知あたりの検知メッセージの数: " << (WHD_num/35)  / DC_num << std::endl;
+  //   p_size << "1検知あたりの結果メッセージの数: " << (WHR_num/32)  / DC_num << std::endl;
 
-    //p_size << "シード値" << rand << std::endl;
+  //   //p_size << "シード値" << rand << std::endl;
 
-    p_size.close();
+  //   p_size.close();
 
-  test.Report (std::cout);
+  // test.Report (std::cout);
   return 0;
 }
 

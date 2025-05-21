@@ -116,8 +116,6 @@ private:
   //エンド間の距離
   int end_distance;
 
-  uint32_t network_size;
-
   //追加部分
   AodvHelper aodv;
   PointToPointHelper point;
@@ -205,35 +203,12 @@ NodeContainer nodes;
 
 int main (int argc, char **argv)
 {
-  //file 削除と作製
-  remove("sample.txt");
-  std::ofstream MyFile("sample.txt");
-
-  remove("WH_count.txt");
-  std::ofstream MyFile2("WH_count.txt");
-
-   //file 削除と作製
-  remove("com_num.txt");
-  std::ofstream MyFile3("com_num.txt");
-
-  filename = GenerateUniqueFilename(def);
-
-  //絶対パスを取得
-  //auto absPath = std::filesystem::absolute(p_file);
-
-  std::cout << filename << std::endl;
-  std::ofstream p_log(filename);
-  if(!p_log.is_open())
-  {
-      std::cerr << "ログファイルが開けません!" << std::endl;
-      return 1;
-  }
-
-  p_log.close();
 
   AodvExample test;
   if (!test.Configure (argc, argv))
+  {
     NS_FATAL_ERROR ("Configuration failed. Aborted.");
+  }
 
   test.Run ();
 
@@ -249,8 +224,8 @@ int main (int argc, char **argv)
   double NJ_num = 0;
   //WHノードを対象とした判定回数
   double WHJ_num = 0;
-  //WHノードを検知した回数
-  double WHD_num = 0;
+  //WHノードを誤検知した回数
+  double WHDM_num = 0;
   //正常なノードをWHノードと誤検知した回数
   double DM_num = 0;
   //経路作成時間の合計
@@ -273,10 +248,25 @@ int main (int argc, char **argv)
         NJ_num = NJ_num + node->Get_Nomal_Node_Judge_Count();
         //WHノードを対象とした検知回数
         WHJ_num = WHJ_num + node->Get_WHJudge_Count();
-        //WHノードを検知した回数
-        WHD_num = WHD_num + node->Get_WHDetection_Count();
-        //正常なノードをWHノードと誤検知した回数
-        DM_num = DM_num + node->Get_Detecstion_miss_Count();
+        //WHノードを正常ノードとご検知した回数
+        WHDM_num = WHDM_num + node->Get_WHDetection_miss_Count();
+
+        std::vector<uint32_t> send_id = node->GetSendID();
+        std::vector<uint32_t> recv_id = node->GetRecvID();
+
+        for(size_t i = 0; i < send_id.size(); ++i)
+        {
+            auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
+
+            if(find == recv_id.end() /*&& i != send_id.size() - 1*/)
+            {
+                //送信したIDのメッセージを受信していない場合、誤検知としてカウント
+                DM_num = DM_num + 1;
+            }
+        } 
+
+        //送信したIDと受信したIDを比較し，受信IDが存在しなかった場合，正常ノードを誤検知したと判定
+
 
         for(size_t i = 0; i < node->Get_Routing_Time().size(); i++)
         {
@@ -287,50 +277,35 @@ int main (int argc, char **argv)
         time_count = time_count + node->Get_Routing_Time_Count();
     }
 
-    std::ofstream p_size(filename,std::ios::app);
-  if(!p_size.is_open())
-  {
-      std::cerr << "書き込み用ログファイルが開けません!" << std::endl;
-      return 1;
-  }
+    //結果を保存するためのファイルに書き込み
+    std::ofstream ofs(test.GetResultFile(), std::ios::trunc);
 
-    //ファイルに書き込む
-    // p_size << "RREQ: " << RREQ_num << std::endl;
-    // p_size << "RREP: " << RREP_num << std::endl;
-    // p_size << "WHD: " << WHD_num << std::endl;
-    // p_size << "WHR: " << WHR_num << std::endl;
-    // p_size << "WH SUM: " << WHD_num + WHR_num << std::endl;
-    // p_size << "SUM: " << RREQ_num + RREP_num + WHD_num + WHR_num << std::endl;
-    // p_size << "WH_SUM/RREP" << (WHD_num + WHR_num) / RREP_num << std::endl;
-    // p_size << "一回の検知に使用した平均パケットサイズ" << (WHD_num + WHR_num) / DC_num << std::endl;
+    if (!ofs) {
+        std::cerr << "Error opening file!" << std::endl;
+        return 1;
+    }
 
-    // p_size << "検知を行った回数: " << DE_num << std::endl;
-    // p_size << "WH攻撃を対象とした検知回数: " << WHDC_num << std::endl;
-    // p_size << "WH攻撃を正常であると検知した回数: " << WHDM_num << std::endl;
-    // p_size << "正常なノードをWh攻撃であると判定した回数: " <<  DM_num<< std::endl;
+    ofs << "RREQの合計バイト数：" << RREQ_num << std::endl;
+    ofs << "RREPの合計バイト数：" << RREP_num << std::endl;
+    ofs << "WHDの合計バイト数：" << WHD_Message_num << std::endl;
+    ofs << "WHRの合計バイト数：" << WHR_Message_num  << "\n" << std::endl;
 
-    // //WHリンクを検知しようとした回数
-    // p_size << "フラグを立てた回数: " << Flag_num << std::endl;
+    ofs << "通常ノードを対象とした判定回数：" << NJ_num << std::endl;
+    ofs << "WHノードを対象とした判定回数：" << WHJ_num << std::endl;
+    ofs << "WHノードを検知した回数：" << WHJ_num - WHDM_num << std::endl;
+    ofs << "正常なノードをWHノードと誤検知した回数：" << DM_num << std::endl;
+    ofs << "経路作成時間の合計：" << RT_num << std::endl;
+    ofs << "経路作成時間を計測した回数：" << time_count << "\n" << std::endl;
 
-    // p_size << "誤検知率: " << DM_num / DE_num << std::endl;
-    // p_size << "検知率: " << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
+    ofs << "---------------------------------------------------------------\n" << std::endl;
 
-    p_size << "WH攻撃を対象とした検知回数" << WHDC_num << std::endl;
-    p_size << "すべての検知回数" <<  DC_num<< std::endl;
-    p_size << "検知率" << (WHDC_num - WHDM_num) / WHDC_num << std::endl;
-    p_size << "誤検知率" << DM_num/(DC_num - WHDC_num) << std::endl;
-    p_size << "検知コスト" << (WHD_num + WHR_num) / DC_num << std::endl;
-
-    p_size << "ネットワークのすべて検知コスト" << WHD_num + WHR_num << std::endl;
-
-    p_size << "検知メッセージの総数" << WHD_num/38 << std::endl;
-    p_size << "結果メッセージの総数" << WHR_num/32 << std::endl;
-    p_size << "1検知あたりの検知メッセージの数: " << (WHD_num/35)  / DC_num << std::endl;
-    p_size << "1検知あたりの結果メッセージの数: " << (WHR_num/32)  / DC_num << std::endl;
+    ofs << "WH攻撃の検知率："<< (WHJ_num - WHDM_num) / WHJ_num << std::endl;
+    ofs << "通常ノードをWH攻撃と誤検知した割合：" << DM_num / NJ_num << std::endl;
+    ofs << "1回の判定にかかる検知コスト：" << (RREQ_num + RREP_num + WHD_Message_num + WHR_Message_num) / (NJ_num + WHJ_num) << std::endl;
 
     //p_size << "シード値" << rand << std::endl;
 
-    p_size.close();
+    ofs.close();
 
   test.Report (std::cout);
   return 0;
@@ -344,7 +319,6 @@ AodvExample::AodvExample () :
   totalTime (40),
   pcap (true),
   printRoutes (false),
-  network_size(500),
   result_file("deff/p-log4"), //結果を保存するファイル
   WH_size(250),
   wait_time(0.5), //検知待機時間
@@ -516,7 +490,7 @@ AodvExample::CreateNodes ()
 
    AnimationInterface anim ("wormhole.xml"); // Mandatory
   AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), network_size, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (size-1), 500, 250);
 
   //WHノードを配置
   //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);

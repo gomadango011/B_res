@@ -386,7 +386,7 @@ private:
    * \param toOrigin routing table entry to originator
    * \param gratRep indicates whether a gratuitous RREP should be unicast to destination
    */
-  void SendReplyByIntermediateNode (RoutingTableEntry & toDst, RoutingTableEntry & toOrigin, bool gratRep);
+  void SendReplyByIntermediateNode (RoutingTableEntry & toDst, RoutingTableEntry & toOrigin, bool gratRep, uint32_t rreq_Id);
   /// Send RREP_ACK
   void SendReplyAck (Ipv4Address neighbor);
   /// Initiate RERR

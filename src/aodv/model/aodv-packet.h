@@ -383,7 +383,8 @@ public:
               uint32_t originSeqNo = 0, Ipv4Address sec = Ipv4Address (), Ipv4Address src = Ipv4Address (),
               Ipv4Address Dst = Ipv4Address(), uint8_t WHF = 0, uint8_t rrepid = 0,
               //WH攻撃を行ったかわかる用のフラグ
-              uint8_t WHflag = 0
+              uint8_t WHflag = 0,
+              uint32_t rreq_id= 0
               );
 
   /**
@@ -558,6 +559,16 @@ public:
     return m_whf;
   }
 
+  //RREQのIDを設定　＆　取得する関数
+  void SetRREQID(uint32_t rreq_id)
+  {
+    m_rreq_id = rreq_id;
+  }
+  uint32_t GetRREQID() const
+  {
+    return m_rreq_id;
+  }
+
   // Flags
   /**
    * \brief 無償WHCEフラグの設定
@@ -612,6 +623,9 @@ private:
   uint8_t        m_rrepid;
   //WH攻撃を行ったかわかる用のフラグ
   uint8_t m_WHflag;
+
+  //RREQのID
+  uint32_t m_rreq_id;
 };
 
 /**
@@ -656,7 +670,7 @@ public:
    */
   RrepHeader (uint8_t prefixSize = 0, uint8_t hopCount = 0, Ipv4Address dst =
                 Ipv4Address (), uint32_t dstSeqNo = 0, Ipv4Address origin =
-                Ipv4Address (), Time lifetime = MilliSeconds (0), uint8_t id = 0, uint8_t rreq=id = 0);
+                Ipv4Address (), Time lifetime = MilliSeconds (0), uint8_t id = 0, uint32_t rreq_id = 0);
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -755,13 +769,13 @@ public:
   }
 
   //RREQIDを設定&取得
-  void SetRREPid (uint8_t rrepid)
+  void SetRREQid (uint8_t rrepid)
   {
-    m_rrepid = rrepid;
+    m_rreqid = rrepid;
   }
-  uint8_t GetRREPid() const
+  uint8_t GetRREQid() const
   {
-    return m_rrepid;
+    return m_rreqid;
   }
 
   // Flags
@@ -810,7 +824,7 @@ private:
   Ipv4Address   m_origin;           ///< Source IP Address
   uint32_t      m_lifeTime;         ///< Lifetime (in milliseconds)
   uint8_t       m_id;
-  uint8_t       m_rrepid;           ///< RREQ ID
+  uint8_t       m_rreqid;           ///< RREQ ID
 };
 
 /**
@@ -865,7 +879,9 @@ public:
                 Ipv4Address source =Ipv4Address (),Ipv4Address aodv_dst = Ipv4Address(), 
                 Time lifetime = MilliSeconds (0), uint8_t rrepid = 0,
                 //WH攻撃を行ったかわかる用のフラグ
-                uint8_t WHflag = 0
+                uint8_t WHflag = 0,
+                //RREQのID
+                uint32_t rreq_id = 0
                 );
   /**
    * \brief Get the type ID.
@@ -1010,6 +1026,16 @@ public:
     return m_WHflag;
   }
 
+  //RREQのIDを設定　＆　取得する関数
+  void SetRREQID(uint32_t rreq_id)
+  {
+    m_rreq_id = rreq_id;
+  }
+  uint32_t GetRREQID() const
+  {
+    return m_rreq_id;
+  }
+
   /**
    * \brief Set the lifetime
    * \param t the lifetime
@@ -1072,6 +1098,8 @@ private:
   uint8_t       m_rrepid;
   //WH攻撃を行ったかわかる用のフラグ
   uint8_t m_WHflag;
+  //RREQのID
+  uint32_t m_rreq_id;
 };
 
 /**
