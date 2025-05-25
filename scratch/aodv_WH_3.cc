@@ -233,6 +233,10 @@ int main (int argc, char **argv)
   //経路作成時間を計測した回数
   int time_count = 0;
 
+  Time min_time = Time(0);
+  Time max_time = Time(0);
+
+
     //ログ取得
     // 各ノードのAODVルーティングプロトコルインスタンスを取得し、トレースを設定
     for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
@@ -254,6 +258,7 @@ int main (int argc, char **argv)
         std::vector<uint32_t> send_id = node->GetSendID();
         std::vector<uint32_t> recv_id = node->GetRecvID();
 
+        //送信したIDと受信したIDを比較し，受信IDが存在しなかった場合，正常ノードを誤検知したと判定
         for(size_t i = 0; i < send_id.size(); ++i)
         {
             auto find = std::find(recv_id.begin(), recv_id.end(), send_id[i]);
@@ -263,14 +268,32 @@ int main (int argc, char **argv)
                 //送信したIDのメッセージを受信していない場合、誤検知としてカウント
                 DM_num = DM_num + 1;
             }
-        } 
+        }
 
-        //送信したIDと受信したIDを比較し，受信IDが存在しなかった場合，正常ノードを誤検知したと判定
-
-
+        //経路作成時間の合計を取得
         for(size_t i = 0; i < node->Get_Routing_Time().size(); i++)
         {
             RT_num = RT_num + node->Get_Routing_Time()[i];
+
+            //最小の経路作成時間を取得
+            if(min_time == Time(0))
+            {
+                min_time = node->Get_Routing_Time()[i];
+            }
+            else
+            {
+                min_time = std::min(min_time, node->Get_Routing_Time()[i]);
+            }
+
+            //最大の経路作成時間を取得
+            if(max_time == Time(0))
+            {
+                max_time = node->Get_Routing_Time()[i];
+            }
+            else
+            {
+                max_time = std::max(max_time, node->Get_Routing_Time()[i]);
+            }
         }
 
         //経路作成時間を計測した回数
@@ -292,16 +315,28 @@ int main (int argc, char **argv)
 
     ofs << "通常ノードを対象とした判定回数：" << NJ_num << std::endl;
     ofs << "WHノードを対象とした判定回数：" << WHJ_num << std::endl;
-    ofs << "WHノードを検知した回数：" << WHJ_num - WHDM_num << std::endl;
+    ofs << "WHノードを正常に検知した回数：" << WHJ_num - WHDM_num << std::endl;
     ofs << "正常なノードをWHノードと誤検知した回数：" << DM_num << std::endl;
-    ofs << "経路作成時間の合計：" << RT_num << std::endl;
+    ofs << "経路作成時間の合計：" << RT_num.GetSeconds() << std::endl;
     ofs << "経路作成時間を計測した回数：" << time_count << "\n" << std::endl;
 
     ofs << "---------------------------------------------------------------\n" << std::endl;
 
     ofs << "WH攻撃の検知率："<< (WHJ_num - WHDM_num) / WHJ_num << std::endl;
     ofs << "通常ノードをWH攻撃と誤検知した割合：" << DM_num / NJ_num << std::endl;
-    ofs << "1回の判定にかかる検知コスト：" << (RREQ_num + RREP_num + WHD_Message_num + WHR_Message_num) / (NJ_num + WHJ_num) << std::endl;
+    ofs << "1回の判定にかかる検知コスト：" << (WHD_Message_num + WHR_Message_num) / (NJ_num + WHJ_num) << std::endl;
+
+    if(time_count == 0)
+    {
+        ofs << "RREPがとどいていません。" << std::endl;
+    }
+    else
+    {
+        ofs << "経路作成時間の平均：" << RT_num.GetSeconds() / time_count << std::endl;
+        ofs << "経路作成時間の最小値：" << min_time << std::endl;
+        ofs << "経路作成時間の最大値：" << max_time << std::endl;
+    }
+
 
     //p_size << "シード値" << rand << std::endl;
 
@@ -313,13 +348,13 @@ int main (int argc, char **argv)
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (400),
+  size (300),
   size_a (5),
   step (50),
   totalTime (40),
   pcap (true),
   printRoutes (false),
-  result_file("deff/p-log4"), //結果を保存するファイル
+  result_file("deff/p-log2.txt"), //結果を保存するファイル
   WH_size(250),
   wait_time(0.5), //検知待機時間
   end_distance(500) //エンド間の距離
@@ -335,10 +370,10 @@ AodvExample::Configure (int argc, char **argv)
   // LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_ALL);
 
   std::random_device randomseed;
-  //int rand = randomseed();
+  int rand = randomseed();
   // SeedManager::SetSeed (rand);
 
-  SeedManager::SetSeed (12);
+  SeedManager::SetSeed (rand);
 
 
   std::ofstream p_size(filename,std::ios::app);

@@ -94,7 +94,9 @@ Node::Node()
     DM_num(0),
     Flag_Count_num(0),
     send_ID(null_list),
-    recv_ID(null_list)
+    recv_ID(null_list),
+    m_routing_time_count(0)
+
 {
   NS_LOG_FUNCTION (this);
   Construct ();

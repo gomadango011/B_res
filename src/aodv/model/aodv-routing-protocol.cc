@@ -1358,6 +1358,8 @@ RoutingProtocol::SendWHCheck (RrepHeader rrepHeader) //WHCheckを送信する
       //RREQのIDを設定
       WHCheckHeader.SetRREQID(rrepHeader.GetRREQid());
 
+      // std::cout << "検知メッセージ送信時のRREQのID：" << WHCheckHeader.GetRREQID() << std::endl;
+
     }
     else
     {
@@ -2649,6 +2651,8 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
                          WHCheckHeader.GetWH_Flag(),
                          /*RREQのID*/WHCheckHeader.GetRREQID()
                          );
+
+  //std::cout << "結果メッセージ送信時のRREQのID：" << WHCheckHeader.GetRREQID() << std::endl;
   
   //Ipv4Address ori1 = WHEndHeader.GetOrigin ();
 
@@ -2855,9 +2859,9 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
     {
       rrep_count++;
       
-      //printf("---------------RREPが目的地に到着---------------:%d　　ID:%d\n", rrep_count, rrepHeader.Getid());
+      printf("---------------RREPが目的地に到着---------------:%d　　ID:%d\n", rrep_count, rrepHeader.Getid());
 
-      std::cout << "RREQの送信元ノードID" << rrepHeader.GetOrigin() <<std::endl;
+      std::cout << "RREQを受信したノード" << receiver <<std::endl;
 
       // exit(0);
 
@@ -2866,15 +2870,20 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
       auto node_id= m_ipv4->GetObject<Node> ()->GetId();
       auto node_count = m_ipv4->GetObject<Node> ();
 
+      std::cout << "RREQを受信したノードID" << node_id <<std::endl;
+
       //ノードID＝0のとき　→　経路作成時間を取得する
       if(node_id == 0)
       {
+
           for(size_t i = 0; i < rreq_list.size(); i++)
           {   
               if(rreq_list[i].rreq_id == rrepHeader.GetRREQid())
               {
                   node_count->Set_Routing_Time(Simulator::Now() - rreq_list[i].rreq_time);
                   node_count->Increment_Routing_Time_Count();
+
+                  std::cout << "RREPが目的地に到着した時間：" << Simulator::Now() - rreq_list[i].rreq_time <<std::endl;
                   break;
               }
           }
