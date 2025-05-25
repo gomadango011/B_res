@@ -116,6 +116,9 @@ private:
   //エンド間の距離
   int end_distance;
 
+  //シード値を決定するためのイテレーション
+  int iteration;
+
   //追加部分
   AodvHelper aodv;
   PointToPointHelper point;
@@ -209,8 +212,11 @@ int main (int argc, char **argv)
   {
     NS_FATAL_ERROR ("Configuration failed. Aborted.");
   }
+  printf("ここまで来た\n");
 
   test.Run ();
+
+  
 
   //----------------------   ログ取得   --------------------
 
@@ -356,8 +362,9 @@ AodvExample::AodvExample () :
   printRoutes (false),
   result_file("deff/p-log2.txt"), //結果を保存するファイル
   WH_size(250),
-  wait_time(0.5), //検知待機時間
-  end_distance(500) //エンド間の距離
+  // wait_time(0.5), //検知待機時間
+  end_distance(600), //エンド間の距離
+  iteration(1) //イテレーション
 {
 }
 
@@ -369,16 +376,6 @@ AodvExample::Configure (int argc, char **argv)
   // LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_ALL);
   // LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_ALL);
 
-  std::random_device randomseed;
-  int rand = randomseed();
-  // SeedManager::SetSeed (rand);
-
-  SeedManager::SetSeed (rand);
-
-
-  std::ofstream p_size(filename,std::ios::app);
-
-  p_size << "シード値" << counter << std::endl;
   CommandLine cmd;
 
   cmd.AddValue ("pcap", "Write PCAP traces.", pcap);
@@ -389,14 +386,21 @@ AodvExample::Configure (int argc, char **argv)
 
   cmd.AddValue("result_file", "result file", result_file); //結果表示ようのファイル名を取得
   cmd.AddValue("WH_size", "WH size", WH_size); //WHの長さ
-  cmd.AddValue("wait_time", "Detection wait time", wait_time); //検知待機時間
+  //cmd.AddValue("wait_time", "Detection wait time", wait_time); //検知待機時間
   cmd.AddValue("end_distance", "end distance", end_distance); //エンド間の距離
+  cmd.AddValue("iteration", "iteration", iteration); //イテレーション
+
+  //取得した値を確認
+  std::cout << "result_file: " << result_file << std::endl;
+  std::cout << "WH_size: " << WH_size << std::endl;
 
   if(end_distance < WH_size + 100)
   {
     std::cerr << "エンド間の距離がWHリンクの長さよりも短いです。" << std::endl;
     return false;
   }
+
+  SeedManager::SetSeed (iteration);
 
   cmd.Parse (argc, argv);
   return true;
@@ -407,7 +411,9 @@ AodvExample::Run ()
 {
 //  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", UintegerValue (1)); // enable rts cts all the time.
   CreateNodes ();
+  printf("ノードを作成\n");
   CreateDevices ();
+  printf("デバイスを作成\n");
   InstallInternetStack ();
   InstallApplications ();
 
@@ -508,8 +514,8 @@ AodvExample::CreateNodes ()
 
  MobilityHelper mobility;
   mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
-                                  "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]"),
-                                  "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=500]")
+                                  "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=800]"),
+                                  "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=800]")
                                  ); 
   
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -525,12 +531,12 @@ AodvExample::CreateNodes ()
 
    AnimationInterface anim ("wormhole.xml"); // Mandatory
   AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), 500, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (size-1), end_distance, 250);
 
   //WHノードを配置
   //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
-  AnimationInterface::SetConstantPosition (nodes.Get (1), 100, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (2), 350, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (1), end_distance - WH_size - 110, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (2), end_distance - 110, 250);
 
   malicious.Add(nodes.Get(1)); //WH1
   malicious.Add(nodes.Get(2));//WH2
