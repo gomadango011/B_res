@@ -43,7 +43,7 @@ mkdir -p "$new_dir"
 for SIZE in "${SIZES[@]}"; do
     # サイズごとにサブディレクトリを作成
     # SIZE_DIR="${new_dir}/node_${SIZE}"
-    # mkdir -p "$SIZE_DIR"
+    mkdir -p "$SIZE_DIR"
 
     #WHリンクの長さを変更
     for WH_SIZE in "${WH_SIZES[@]}"; do
@@ -80,7 +80,7 @@ for SIZE in "${SIZES[@]}"; do
         
             #評価結果を出力するファイル名を作成
             DEF="${SIZE_DIR}/packet_num_${i}.txt"
-            ./waf run "${PROGRAM} --size=${SIZE} --end_distance=${DISTANCE} --time=$TIME --result_file="${DEF}" --iteration=$i > log_node${SIZE}_end_distance${DISTANCE}.txt 2>&1"
+            ./waf --run "${PROGRAM} --size=${SIZE} --end_distance=${DISTANCE} --time=$TIME --result_file="${DEF}" --iteration=$i > log_node${SIZE}_end_distance${DISTANCE}.txt 2>&1"
         
             # 実行失敗時のエラーハンドリング
             if [ $? -ne 0 ]; then
