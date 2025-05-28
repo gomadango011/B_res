@@ -363,7 +363,7 @@ AodvExample::AodvExample () :
   size (300),
   size_a (5),
   step (50),
-  totalTime (1),
+  totalTime (20),
   pcap (true),
   printRoutes (false),
   result_file("deff/p-log5.txt"), //結果を保存するファイル

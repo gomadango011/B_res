@@ -753,7 +753,7 @@ RrepHeader::Serialize (Buffer::Iterator i) const
   WriteTo (i, m_origin);
   i.WriteHtonU32 (m_lifeTime);
   i.WriteU8 (m_id);
-  i.WriteU8 (m_rreqid);
+  i.WriteHtonU32 (m_rreqid);
 }
 
 uint32_t

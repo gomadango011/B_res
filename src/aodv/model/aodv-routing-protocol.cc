@@ -1267,6 +1267,13 @@ RoutingProtocol::SendRequest (Ipv4Address dst) //RREQを送信する
   //RREQ送信時間リストに保存する
   rreq_list.push_back(request_time);
 
+  //rreq_listをすべて表示
+  for (size_t i = 0; i < rreq_list.size(); ++i)
+    {
+      rreq_info& req = rreq_list[i];
+      std::cout << "RREQ sent at: " << req.rreq_time << " seconds, Request ID: " << req.rreq_id << std::endl;
+    }
+
   //再ブロードキャストのためにコメントアウト
   //ScheduleRreqRetry (dst);
 
@@ -2561,7 +2568,23 @@ RoutingProtocol::SendReply (RreqHeader const & rreqHeader, RoutingTableEntry con
   rrep_id++;
 
   RrepHeader rrepHeader ( /*prefixSize=*/ 0, /*hops=*/ 0, /*dst=*/ rreqHeader.GetDst (),
-                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id, /*RREQのID*/rreqHeader.GetId());
+                          /*dstSeqNo=*/ m_seqNo, /*origin=*/ toOrigin.GetDestination (), /*lifeTime=*/ m_myRouteTimeout, /*id*/ rrep_id/*, RREQのIDrreqHeader.GetId()*/);
+
+  rrepHeader.SetRREQid(rreqHeader.GetId());
+  
+  std::cout<< "RREP送信時のRREQのID：" << rrepHeader.GetRREQid() << std::endl;
+  
+  std::cout<< "RREP送信時のRREQのID2：" << rreqHeader.GetId() << std::endl;
+  if(rrepHeader.GetRREQid() == rreqHeader.GetId())
+  {
+    std::cout << "RREQのIDが一致しました" << std::endl;
+  }
+  else
+  {
+    std::cout << "RREQのIDが一致しません" << std::endl;
+  }
+
+  
 
   //printf("RREP送信時のFirst Hop: %u\n", toOrigin.GetNextHop().Get ());
 
@@ -2683,8 +2706,8 @@ RoutingProtocol::SendWHCheckEnd (WHCheckHeader const &WHCheckHeader,
 
 //中間ノードでRREPを送信
 void
-RoutingProtocol::SendReplyByIntermediateNode (RoutingTableEntry &toDst, RoutingTableEntry &toOrigin,
-                                              bool gratRep, uint32_t rreq_id)
+RoutingProtocol:: SendReplyByIntermediateNode (RoutingTableEntry &toDst, RoutingTableEntry &toOrigin,
+                                             bool gratRep, uint32_t rreq_id)
 {
   NS_LOG_FUNCTION (this);
   rrep_id++;
@@ -2692,6 +2715,7 @@ RoutingProtocol::SendReplyByIntermediateNode (RoutingTableEntry &toDst, RoutingT
                          /*dst=*/toDst.GetDestination (), /*dst seqno=*/toDst.GetSeqNo (),
                          /*origin=*/toOrigin.GetDestination (), /*lifetime=*/toDst.GetLifeTime (),
                          /*id*/ rrep_id, /*RREQのID*/rreq_id);
+  std::cout << "中間ノードがRREPを送信するときのRREQID " << rrepHeader.GetRREQid() << std::endl;
   /* RREQを受信したノードが隣接ノードであった場合、我々は次のようになる。
   　おそらく一方向リンクに直面している...。RREP-ackをリクエストする
    */
@@ -2873,11 +2897,16 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
       std::cout << "RREQを受信したノードID" << node_id <<std::endl;
 
       //ノードID＝0のとき　→　経路作成時間を取得する
-      if(node_id == 0)
+      if(receiver == Ipv4Address("10.0.0.1") || node_id == 0)
       {
-
-          for(size_t i = 0; i < rreq_list.size(); i++)
+        std::cout << "宛先ノードのIPアドレス" << rrepHeader.GetDst() << std::endl;
+        std::cout << "経路作成時間を取得   RREQのIDを取得：" << rrepHeader.GetRREQid() <<std::endl;
+          size_t i = 0;
+          for(i = 0; i < rreq_list.size(); i++)
           {   
+              rreq_info& req = rreq_list[i];
+              std::cout << "RREQ sent at: " << req.rreq_time << " seconds, Request ID: " << req.rreq_id << std::endl;
+
               if(rreq_list[i].rreq_id == rrepHeader.GetRREQid())
               {
                   node_count->Set_Routing_Time(Simulator::Now() - rreq_list[i].rreq_time);
@@ -2887,6 +2916,11 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
                   break;
               }
           }
+          if(i == 0)
+          {
+            std::cout << "ループが回っていません" <<std::endl;
+          }
+
       }
 
       return;
