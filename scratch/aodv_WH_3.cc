@@ -41,6 +41,7 @@
 #include "ns3/udp-echo-helper.h"
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 
 //namespace fs = std::filesystem;
 using namespace ns3;
@@ -67,6 +68,8 @@ public:
 
   //保存用のファイルを返す関数
   std::string GetResultFile() const { return result_file; }
+
+  int Getiteration() const { return iteration; }
 
   AodvExample ();
   /**
@@ -118,6 +121,8 @@ private:
 
   //シード値を決定するためのイテレーション
   int iteration;
+
+  // int rand = std::rand(); // 1から1000のランダムな整数を生成
 
   //追加部分
   AodvHelper aodv;
@@ -314,6 +319,7 @@ int main (int argc, char **argv)
         return 1;
     }
 
+    ofs << "シード値：" << test.Getiteration() << std::endl;
     ofs << "RREQの合計バイト数：" << RREQ_num << std::endl;
     ofs << "RREPの合計バイト数：" << RREP_num << std::endl;
     ofs << "WHDの合計バイト数：" << WHD_Message_num << std::endl;
@@ -357,10 +363,10 @@ AodvExample::AodvExample () :
   size (300),
   size_a (5),
   step (50),
-  totalTime (40),
+  totalTime (1),
   pcap (true),
   printRoutes (false),
-  result_file("deff/p-log2.txt"), //結果を保存するファイル
+  result_file("deff/p-log5.txt"), //結果を保存するファイル
   WH_size(250),
   // wait_time(0.5), //検知待機時間
   end_distance(600), //エンド間の距離
@@ -400,7 +406,14 @@ AodvExample::Configure (int argc, char **argv)
     return false;
   }
 
-  SeedManager::SetSeed (iteration);
+  // int rand = std::rand() ; // 1から1000のランダムな整数を生成
+  std::random_device randomseed;
+  int rand = randomseed();
+  SeedManager::SetSeed (rand);
+
+  std::cout << "シード値: " << rand << std::endl;
+
+  // sleep(100);
 
   cmd.Parse (argc, argv);
   return true;
@@ -530,13 +543,13 @@ AodvExample::CreateNodes ()
 //   malicious.Add(nodes.Get(2));//WH2
 
    AnimationInterface anim ("wormhole.xml"); // Mandatory
-  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), end_distance, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 400);
+  AnimationInterface::SetConstantPosition (nodes.Get (size-1), end_distance, 400);
 
   //WHノードを配置
   //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
   AnimationInterface::SetConstantPosition (nodes.Get (1), end_distance - WH_size - 110, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (2), end_distance - 110, 250);
+  AnimationInterface::SetConstantPosition (nodes.Get (2), end_distance - 110, 400);
 
   malicious.Add(nodes.Get(1)); //WH1
   malicious.Add(nodes.Get(2));//WH2
