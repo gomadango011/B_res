@@ -55,7 +55,8 @@ for SIZE in "${SIZES[@]}"; do
     
         #評価結果を出力するファイル名を作成
         DEF="${SIZE_DIR}/packet_num_${i}.txt"
-        ./waf --run "${PROGRAM} --size=${SIZE} --time=$TIME --WH_size=150 --result_file="${DEF}" --iteration=$i > log_node${SIZE}.txt 2>&1"
+        j=$((i+40))
+        ./waf --run "${PROGRAM} --size=${SIZE} --time=$TIME --WH_size=150 --result_file="${DEF}" --iteration=$j"
     
         # 実行失敗時のエラーハンドリング
         if [ $? -ne 0 ]; then
