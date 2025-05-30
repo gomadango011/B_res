@@ -2909,7 +2909,7 @@ RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sen
 
               if(rreq_list[i].rreq_id == rrepHeader.GetRREQid())
               {
-                  node_count->Set_Routing_Time(Simulator::Now() - rreq_list[i].rreq_time);
+                  node_count->Set_Routing_Time(Simulator::Now());
                   node_count->Increment_Routing_Time_Count();
 
                   std::cout << "RREPが目的地に到着した時間：" << Simulator::Now() - rreq_list[i].rreq_time <<std::endl;
