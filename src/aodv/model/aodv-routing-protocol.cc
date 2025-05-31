@@ -2197,6 +2197,8 @@ RoutingProtocol::RecvWHCheck (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address s
     writing_file << writing_text << std::endl;
     writing_file.close();
 
+  
+
   // ノードは、ブラックリストにあるノードから受信したすべてのRREQを無視する。
   RoutingTableEntry toPrev;
   if (m_routingTable.LookupRoute (sender, toPrev))//宛先アドレス dst=sender を持つルーティング・テーブル・エントリーを検索する。

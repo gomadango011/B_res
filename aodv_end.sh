@@ -39,36 +39,34 @@ done
 # 新しいディレクトリを作成  p_log(N)
 mkdir -p "$new_dir"
 
-#ノード数とエンド間距離を変えながら実行
-for SIZE in "${SIZES[@]}"; do
-    # サイズごとにサブディレクトリを作成
-    SIZE_DIR="${new_dir}/node_${SIZE}"
+
+# サイズごとにサブディレクトリを作成
+SIZE_DIR="${new_dir}/end_distance"
+mkdir -p "$SIZE_DIR"
+
+#エンド間距離を変更
+for DISTANCE in "${END_DISTANCE[@]}"; do
+    #エンド間距離ごとのディレクトリを作成
+    SIZE_DIR="${new_dir}/end_distance/${DISTANCE}"
     mkdir -p "$SIZE_DIR"
 
-    #エンド間距離を変更
-    for DISTANCE in "${END_DISTANCE[@]}"; do
-        #エンド間距離ごとのディレクトリを作成
-        SIZE_DIR="${new_dir}/node_${SIZE}/${SIZE}_end_distance${DISTANCE}"
-        mkdir -p "$SIZE_DIR"
-
-         # 10回シミュレーションを実行
-        for ((i=1; i<=RUN_COUNT; i++)); do
-            echo "Running simulation with size=$SIZE, end_distance=$DISTANCE iteration=$i"
-        
-            #評価結果を出力するファイル名を作成
-            DEF="${SIZE_DIR}/packet_num_${i}.txt"
-            ./waf --run "${PROGRAM} --size=${SIZE} --end_distance=${DISTANCE} --time=$TIME --result_file="${DEF}" --iteration=$i"
-        
-            # 実行失敗時のエラーハンドリング
-            if [ $? -ne 0 ]; then
-                echo "Simulation failed for size=${SIZE}, iteration=$i"
-                exit 1
-            fi
-        done
-        
+        # 10回シミュレーションを実行
+    for ((i=1; i<=RUN_COUNT; i++)); do
+        echo "Running simulation with size=300, end_distance=$DISTANCE iteration=$i"
+    
+        #評価結果を出力するファイル名を作成
+        DEF="${SIZE_DIR}/packet_num_${i}.txt"
+        ./waf --run "${PROGRAM} --size=300 --end_distance=${DISTANCE} --time=$TIME --result_file="${DEF}" --iteration=$i"
+    
+        # 実行失敗時のエラーハンドリング
+        if [ $? -ne 0 ]; then
+            echo "Simulation failed for size=${SIZE}, iteration=$i"
+            exit 1
+        fi
     done
-
+    
 done
+
 
 #ノード数が500, 600のとき、WHリンクの長さが150の場合のシミュレーションを実行
 for SIZE in 500 600; do

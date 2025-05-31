@@ -30,6 +30,18 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/v4ping-helper.h"
 #include "ns3/yans-wifi-helper.h"
+#include "ns3/flow-monitor-module.h"
+//追加部分
+#include "ns3/applications-module.h"
+#include "ns3/wifi-module.h"
+#include "ns3/netanim-module.h"
+#include "myapp.h"
+//#include "/home/horie/workplace_exist/ns-3-allinone/ns-3.30/build/ns3/trace-helper.h"
+#include <random>
+#include "ns3/udp-echo-helper.h"
+#include <iostream>
+#include <fstream>
+#include <unistd.h>
 
 using namespace ns3;
 
@@ -108,7 +120,15 @@ int main (int argc, char **argv)
     NS_FATAL_ERROR ("Configuration failed. Aborted.");
 
   test.Run ();
+  AnimationInterface* anim = new AnimationInterface("anim.xml");
+
+  Simulator::Run ();
+  Simulator::Destroy ();
+
   test.Report (std::cout);
+
+  delete anim;
+  
   return 0;
 }
 
@@ -153,8 +173,6 @@ AodvExample::Run ()
   std::cout << "Starting simulation for " << totalTime << " s ...\n";
 
   Simulator::Stop (Seconds (totalTime));
-  Simulator::Run ();
-  Simulator::Destroy ();
 }
 
 void
@@ -192,17 +210,28 @@ AodvExample::CreateDevices ()
 {
   WifiMacHelper wifiMac;
   wifiMac.SetType ("ns3::AdhocWifiMac");
-  YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
-  YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
+
+  YansWifiChannelHelper wifiChannel;
+  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+  wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
+
+  YansWifiPhyHelper wifiPhy;
+
+  wifiPhy.Set("TxPowerStart", DoubleValue(16.0)); // 40mW
+  wifiPhy.Set("TxPowerEnd", DoubleValue(16.0));
+  wifiPhy.Set("RxSensitivity", DoubleValue(-85.0)); // 約100m通信可能
+
   wifiPhy.SetChannel (wifiChannel.Create ());
+
+ 
+
   WifiHelper wifi;
+  printf("ここまで実行\n");
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate6Mbps"), "RtsCtsThreshold", UintegerValue (0));
+  printf("ここまで実行1\n");
   devices = wifi.Install (wifiPhy, wifiMac, nodes); 
 
-  if (pcap)
-    {
-      wifiPhy.EnablePcapAll (std::string ("aodv"));
-    }
+   
 }
 
 void
@@ -234,9 +263,5 @@ AodvExample::InstallApplications ()
   p.Start (Seconds (0));
   p.Stop (Seconds (totalTime) - Seconds (0.001));
 
-  // move node away
-  Ptr<Node> node = nodes.Get (size/2);
-  Ptr<MobilityModel> mob = node->GetObject<MobilityModel> ();
-  Simulator::Schedule (Seconds (totalTime/3), &MobilityModel::SetPosition, mob, Vector (1e5, 1e5, 1e5));
 }
 

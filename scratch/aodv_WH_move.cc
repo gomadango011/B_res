@@ -130,6 +130,8 @@ private:
 
   YansWifiPhyHelper wifiPhy;
 
+  // YansWifiPhyHelper wifiPhy;
+
   // network
   /// nodes used in the example
   
@@ -137,6 +139,11 @@ private:
   //追加部分
   NodeContainer not_malicious;
   NodeContainer malicious;
+
+  //固定ノード
+  NodeContainer fixedNodes;
+  //移動ノード
+  NodeContainer mobileNodes;
   //ここまで
 
   /// devices used in the example
@@ -209,6 +216,8 @@ ReceivePacket(Ptr<const Packet> p, const Address & addr)
 
 NodeContainer nodes;
 
+
+
 int main (int argc, char **argv)
 {
 
@@ -221,7 +230,11 @@ int main (int argc, char **argv)
 
   test.Run ();
 
-  
+  AnimationInterface* anim = new AnimationInterface("anim.xml");
+
+  Simulator::Run ();
+  Simulator::Destroy ();
+
 
   //----------------------   ログ取得   --------------------
 
@@ -355,18 +368,21 @@ int main (int argc, char **argv)
     ofs.close();
 
   test.Report (std::cout);
+
+  delete anim;
+
   return 0;
 }
 
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
-  size (300),
+  size (400),
   size_a (5),
   step (50),
-  totalTime (20),
-  pcap (true),
+  totalTime (40),
+  pcap (false),
   printRoutes (false),
-  result_file("deff/p-log5.txt"), //結果を保存するファイル
+  result_file("deff/p-log.txt"), //結果を保存するファイル
   WH_size(250),
   // wait_time(0.5), //検知待機時間
   end_distance(600), //エンド間の距離
@@ -472,8 +488,7 @@ AodvExample::Run ()
   
 
 
-  Simulator::Run ();
-  Simulator::Destroy ();
+  
 
 
 
@@ -513,26 +528,33 @@ AodvExample::CreateNodes ()
       os << "node-" << i;
       Names::Add (os.str (), nodes.Get (i));
     }
-  // Create static grid
-  // MobilityHelper mobility;
-  // mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
-  //                                "MinX", DoubleValue (0.0),
-  //                                "MinY", DoubleValue (0.0),
-  //                                "DeltaX", DoubleValue (step),
-  //                                "DeltaY", DoubleValue (10000),
-  //                                "GridWidth", UintegerValue (size),
-  //                                "LayoutType", StringValue ("RowFirst"));
-  // mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  // mobility.Install (nodes);
 
- MobilityHelper mobility;
+  
+  for (uint32_t i = 0; i < size; ++i) {
+      if(i == 0 || i == size - 1 || i == 1 || i == 2) {
+          // 固定ノードとして追加
+          fixedNodes.Add(nodes.Get(i));
+      }
+      else
+      {
+          // 移動ノードとして追加
+          mobileNodes.Add(nodes.Get(i));
+      }
+  }
+
+  //ノードをランダムに配置
+  MobilityHelper mobility;
   mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
                                   "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=800]"),
                                   "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=800]")
                                  ); 
   
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (nodes);
+  mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
+                                "Bounds", RectangleValue (Rectangle (0, 800, 0, 800)),
+                               "Speed", StringValue("ns3::UniformRandomVariable[Min=3|Max=40]"),
+                               "Distance", DoubleValue(15.0)
+                            );
+  mobility.Install (mobileNodes);
   
 //   not_malicious.Add(nodes.Get(0));        //src
 //   not_malicious.Add(nodes.Get(size-1));  //dst
@@ -542,21 +564,30 @@ AodvExample::CreateNodes ()
 //   malicious.Add(nodes.Get(1)); //WH1
 //   malicious.Add(nodes.Get(2));//WH2
 
-   AnimationInterface anim ("wormhole.xml"); // Mandatory
-  AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 400);
-  AnimationInterface::SetConstantPosition (nodes.Get (size-1), end_distance, 400);
+MobilityHelper fixedMobility;
 
-  //WHノードを配置
-  //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
-  AnimationInterface::SetConstantPosition (nodes.Get (1), end_distance - WH_size - 110, 250);
-  AnimationInterface::SetConstantPosition (nodes.Get (2), end_distance - 110, 400);
-  //協力者ノードを配置
-  AnimationInterface::SetConstantPosition (nodes.Get (3), end_distance - 100, 400); //協力者1
+// 固定ノードの位置を設定
+Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
+positionAlloc->Add(Vector(0, 400, 0));  //送信者の位置情報　ID=0
+positionAlloc->Add(Vector(end_distance - WH_size - 110, 400, 0));  //WH1の位置情報
+positionAlloc->Add(Vector(end_distance - 110, 400, 0));  //WH2の位置情報
+positionAlloc->Add(Vector(end_distance, 400, 0));  //受信者の位置情報  ID=size-1
+
+fixedMobility.SetPositionAllocator(positionAlloc);
+    
+fixedMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+fixedMobility.Install(fixedNodes);
+
+  // AnimationInterface::SetConstantPosition (nodes.Get (0), 0, 400);
+  // AnimationInterface::SetConstantPosition (nodes.Get (size-1), end_distance, 400);
+
+  // //WHノードを配置
+  // //AnimationInterface::SetConstantPosition (nodes.Get (1), 280, 280);
+  // AnimationInterface::SetConstantPosition (nodes.Get (1), end_distance - WH_size - 110, 250);
+  // AnimationInterface::SetConstantPosition (nodes.Get (2), end_distance - 110, 400);
 
   malicious.Add(nodes.Get(1)); //WH1
   malicious.Add(nodes.Get(2));//WH2
-  
-  anim.EnablePacketMetadata(true);
 
 }
 
@@ -633,10 +664,5 @@ AodvExample::InstallApplications ()
   ApplicationContainer p = ping.Install (nodes.Get (0));
   p.Start (Seconds (0));
   p.Stop (Seconds (totalTime) - Seconds (0.001));
-
-  // move node away
-  Ptr<Node> node = nodes.Get (size/2);
-  Ptr<MobilityModel> mob = node->GetObject<MobilityModel> ();
-  Simulator::Schedule (Seconds (totalTime/3), &MobilityModel::SetPosition, mob, Vector (1e5, 1e5, 1e5));
 }
 
