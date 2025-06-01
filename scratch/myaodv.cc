@@ -135,7 +135,7 @@ int main (int argc, char **argv)
 //-----------------------------------------------------------------------------
 AodvExample::AodvExample () :
   size (2),
-  step (50),
+  step (110),
   totalTime (10000),
   pcap (true),
   printRoutes (true)
@@ -209,29 +209,33 @@ void
 AodvExample::CreateDevices ()
 {
   WifiMacHelper wifiMac;
-  wifiMac.SetType ("ns3::AdhocWifiMac");
-
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
-
   YansWifiPhyHelper wifiPhy;
-
-  wifiPhy.Set("TxPowerStart", DoubleValue(16.0)); // 40mW
-  wifiPhy.Set("TxPowerEnd", DoubleValue(16.0));
-  wifiPhy.Set("RxSensitivity", DoubleValue(-85.0)); // 約100m通信可能
-
+  wifiMac.SetType ("ns3::AdhocWifiMac");
+  wifiPhy = YansWifiPhyHelper::Default ();
+  YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
 
- 
+  //送信電力と受信電力を設定
+  //送信電力と受信電力を設定
+  wifiPhy.Set("TxPowerStart", DoubleValue(24.7)); // 送信電力 20 dBm
+  wifiPhy.Set("TxPowerEnd", DoubleValue(24.7));
 
   WifiHelper wifi;
-  printf("ここまで実行\n");
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate6Mbps"), "RtsCtsThreshold", UintegerValue (0));
-  printf("ここまで実行1\n");
   devices = wifi.Install (wifiPhy, wifiMac, nodes); 
 
-   
+  // PointToPointHelper pointToPoint;
+  // pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  // pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
+  // // NetDeviceContainer devices;
+  // mal_devices = pointToPoint.Install (malicious);
+
+  // if (pcap)
+  //   {
+  //     wifiPhy.EnablePcapAll (std::string ("aodv"));
+  //     pointToPoint.EnablePcapAll (std::string ("point-to-point"));
+  //   }
 }
 
 void

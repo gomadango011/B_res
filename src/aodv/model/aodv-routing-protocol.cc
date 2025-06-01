@@ -179,7 +179,7 @@ RoutingProtocol::RoutingProtocol ()
       m_rreqRateLimit (10), //RREQの一秒あたりの最大値
       m_rerrRateLimit (10), //RRERの一秒あたりの最大値
       m_WHCheckRateLimit (3), //WHCSの一秒あたりの最大値
-      m_activeRouteTimeout (Seconds(10000)), //ルートが有効とみなされる期間
+      m_activeRouteTimeout (Seconds (3)), //ルートが有効とみなされる期間
       m_netDiameter (1000), //ネットワーク内の最大ホップ数
       m_nodeTraversalTime (
           MilliSeconds (1000)), //パケットの１ホップあたりのトラバーサルタイムの推定値
