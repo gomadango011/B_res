@@ -45,29 +45,6 @@ for SIZE in "${SIZES[@]}"; do
     # SIZE_DIR="${new_dir}/node_${SIZE}"
     mkdir -p "$SIZE_DIR"
 
-    #WHリンクの長さを変更
-    for WH_SIZE in "${WH_SIZES[@]}"; do
-        #WHリンクの長さごとのディレクトリを作成
-        SIZE_DIR="${new_dir}/node_${SIZE}/${SIZE}_WH${WH_SIZE}"
-        mkdir -p "$SIZE_DIR"
-
-         # 10回シミュレーションを実行
-        for ((i=1; i<=RUN_COUNT; i++)); do
-            echo "Running simulation with size=$SIZE, WHの長さ=$WH_SIZE iteration=$i"
-        
-            #評価結果を出力するファイル名を作成
-            DEF="${SIZE_DIR}/packet_num_${i}.txt"
-            ./waf --run "${PROGRAM} --size=${SIZE} --WH_size=${WH_SIZE} --time=$TIME --result_file="${DEF}" --iteration=$i"
-        
-            # 実行失敗時のエラーハンドリング
-            if [ $? -ne 0 ]; then
-                echo "Simulation failed for size=$SIZE, iteration=$i"
-                exit 1
-            fi
-        done
-        
-    done
-
     #エンド間距離を変更
     for DISTANCE in "${END_DISTANCE[@]}"; do
         #エンド間距離ごとのディレクトリを作成
@@ -81,6 +58,29 @@ for SIZE in "${SIZES[@]}"; do
             #評価結果を出力するファイル名を作成
             DEF="${SIZE_DIR}/packet_num_${i}.txt"
             ./waf --run "${PROGRAM} --size=${SIZE} --end_distance=${DISTANCE} --time=$TIME --result_file="${DEF}" --iteration=$i"
+        
+            # 実行失敗時のエラーハンドリング
+            if [ $? -ne 0 ]; then
+                echo "Simulation failed for size=$SIZE, iteration=$i"
+                exit 1
+            fi
+        done
+        
+    done
+
+    #WHリンクの長さを変更
+    for WH_SIZE in "${WH_SIZES[@]}"; do
+        #WHリンクの長さごとのディレクトリを作成
+        SIZE_DIR="${new_dir}/node_${SIZE}/${SIZE}_WH${WH_SIZE}"
+        mkdir -p "$SIZE_DIR"
+
+         # 10回シミュレーションを実行
+        for ((i=1; i<=RUN_COUNT; i++)); do
+            echo "Running simulation with size=$SIZE, WHの長さ=$WH_SIZE iteration=$i"
+        
+            #評価結果を出力するファイル名を作成
+            DEF="${SIZE_DIR}/packet_num_${i}.txt"
+            ./waf --run "${PROGRAM} --size=${SIZE} --WH_size=${WH_SIZE} --time=$TIME --result_file="${DEF}" --iteration=$i"
         
             # 実行失敗時のエラーハンドリング
             if [ $? -ne 0 ]; then

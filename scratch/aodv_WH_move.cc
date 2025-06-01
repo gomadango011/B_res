@@ -551,8 +551,8 @@ AodvExample::CreateNodes ()
   
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
                                 "Bounds", RectangleValue (Rectangle (0, 800, 0, 800)),
-                               "Speed", StringValue("ns3::UniformRandomVariable[Min=3|Max=40]"),
-                               "Distance", DoubleValue(15.0)
+                               "Speed", StringValue("ns3::UniformRandomVariable[Min=3|Max=14]"),
+                               "Distance", DoubleValue(50.0)
                             );
   mobility.Install (mobileNodes);
   
