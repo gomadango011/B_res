@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # 実行対象のNS3プログラム
-PROGRAM="aodv_WH_3"
+PROGRAM="aodv_WH_move"
 
 # 実行サイズのリスト
-SIZES=(400 500 600 700)
+SIZES=(300 400 500 600 700)
 
 #WHリンクの長さ
 WH_SIZES=(150 200 250 300 350)

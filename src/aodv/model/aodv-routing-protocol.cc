@@ -3223,7 +3223,7 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
   if (!m_routingTable.LookupRoute (WHEndHeader.GetOrigin (), toOrigin) ||
       toOrigin.GetFlag () == IN_SEARCH)
     {
-      //return; // Impossible! drop.
+      return; // Impossible! drop.
     }
   toOrigin.SetLifeTime (std::max (m_activeRouteTimeout, toOrigin.GetLifeTime ()));
   m_routingTable.Update (toOrigin);
