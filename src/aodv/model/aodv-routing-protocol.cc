@@ -3187,8 +3187,13 @@ RoutingProtocol::RecvWHCheckEnd (Ptr<Packet> p, Ipv4Address receiver, Ipv4Addres
       //RREPを送信する
       RoutingTableEntry toSrc;
       Ipv4Address src = WHEndHeader.GetSrc();
-      m_routingTable.LookupRoute (src, toSrc);
+      
       //printf("RREPを送信する\n");
+
+      if(!m_routingTable.LookupRoute (src, toSrc) )
+      {
+        return; // Impossible! drop.
+      }
 
       
 
